@@ -11,7 +11,7 @@ function y = bdf1(odefun,t,y0,optimmethod)
         elseif nargout == 2
             [f, j] = odefun(t,h);
             F = (h - y(:,i-1))/(t(i)-t(i-1)) - f;
-            J = 1/(t(i)-t(i-1)) - j;
+            J = speye(length(f))/(t(i)-t(i-1)) - j;
         end
     end
     
