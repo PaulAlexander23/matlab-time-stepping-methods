@@ -17,7 +17,8 @@ function y = bdf1(odefun,t,y0,optimmethod)
     
     for i = 2:n
         y(:,i) = optimmethod(@(h) fun(h,odefun,i,t,y),y(:,i-1));
-        if any(isnan(y(:,i)),'all')
+        
+        if any(isnan(y(:,i)))
             fprintf('Nan`s in solution\n')
             break;
         end
