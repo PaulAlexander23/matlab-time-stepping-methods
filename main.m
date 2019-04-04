@@ -57,7 +57,7 @@ t = linspace(0,10,101);
 
 optimmethod = @newton;
 tic
-y = bdf1_semi_implicit(@(t,y) fun2(y,1), t, y0, optimmethod, @expf);
+y = bdf3_semi_implicit(@(t,y) fun2(y,1), t, y0, optimmethod, @expf);
 toc
 
 plot(t,y)

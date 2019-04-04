@@ -2,7 +2,7 @@ function y = bdf3_semi_implicit(odefun, t, y0, optimmethod, explicitfun)
     n = length(t);
     y = zeros(length(y0), n);
 
-    y(:, 1:3) = bdf2(odefun, t(1:3), y0, optimmethod, explicitfun);
+    y(:, 1:3) = bdf2_semi_implicit(odefun, t(1:3), y0, optimmethod, explicitfun);
 
     function [F, J] = fun(h, odefun, i, t, y, expf)
 
