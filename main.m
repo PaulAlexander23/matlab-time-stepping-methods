@@ -50,6 +50,18 @@ end
 
 plot(t,y)
 
+%% Problem with an explicit function
+
+y0 = [2,3]';
+t = linspace(0,10,101);
+
+optimmethod = @newton;
+tic
+y = bdf1_semi_implicit(@(t,y) fun2(y,1), t, y0, optimmethod, @expf);
+toc
+
+plot(t,y)
+
 function [f,J] = fun(y)
     f = [(y(1)-1).^2 + (y(1)-1).^2;(y(1)-1).*(y(2)-1)];
     if nargout > 1
@@ -67,5 +79,11 @@ function [f, j] = fun2(y,eta)
 end
 
 function f = ode(y,eta)
+    y
+    eta
     f = eta * y;
+end
+
+function f = expf(t,y)
+    f = -y.^2;
 end
