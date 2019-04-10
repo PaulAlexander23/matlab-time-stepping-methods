@@ -1,54 +1,73 @@
-function y = bdf(odefun,t,y0)
+function y = bdf(odefun, t, y0, options)
+    %BDF Solve differential equations using backward differentiation formulae.
+    % Handle options
+    if nargin < 4, options = struct(); end
+    
+    if ~isfield(options,'Order'), options.Order = 4; end
+    if ~isfield(options,'Optimmethod')
+        optimopts = optimoptions('fsolve','Display','off');
+        options.Optimmethod = @(fun, x0) fsolve(fun, x0, optimopts);
+    end
+    if ~isfield(options,'Jacobian'), options.Jacobian = []; end
+    
+    % Preallocate solution
     n = length(t);
-    y = zeros([size(y0),n]);
+    y = zeros(length(y0), n);
     
-    y(:,:,1) = y0;
-    h = y0;
-    hm1 = y0;
-    hm2 = y0;
-    
-    for i = 2:n
-        dt = t(i)-t(i-1);
-        
-        [h, hm1,  hm2] = step_newton(odefun,t(i),dt,h,hm1,hm2);
-        
-        y(:,:,i) = h;
+    % Initialise first steps iteratively with lower orders
+    if options.Order == 1
+        y(:, 1) = y0;
+    else
+        newoptions = options;
+        newoptions.Order = options.Order - 1;
+        y(:, 1:options.Order) = bdf(odefun, t(1:options.Order), ...
+            y0, newoptions);
     end
     
-    y = squeeze(y);
+    % Compute BDF coefficients
+    m = (1:options.Order);
+    k = triu(repmat((0:options.Order)',1,options.Order),-1);
+    bin = factorial(m)./(factorial(m-k).*factorial(k));
+    bin = triu(bin,-1).* (-1).^(0:options.Order)';
+    v = 1./m;
+    coeff = bin*v';
     
-    function [h, hm1,  hm2] = step_newton(odefun,t,dt,h,hm1,hm2)
+    % Compute interpolation coefficients
+    interpCoeff = -bin(2:end,end);
+    
+    % Define function to solve
+    function [F,J] = fun(h,odefun,t,dt,coeff,expf,options)
+        % BDF
+        F = coeff * h - odefun(t, h) * dt - expf;
         
-        temp = h;
-        
-        error = 1;
-        m = 1;
-        
-        while error > 1e-7 && m <= 20
-            res =  h - bdf2(odefun,t,dt,h,hm1,hm2);
-            error = norm(res);
-            jac = jacobian(odefun,t,dt,h);
-            h = h-jac\res;
-            m = m + 1;
+        if ~isempty(options.Jacobian)
+            % Generate Jacobian
+            j = options.Jacobian(t, h);
+            % Compute BDF jacobian
+            J = coeff * speye(size(j)) - j * dt;
         end
+    end
+    
+    % Time stepping loop
+    for i = options.Order+1:n
+        % BDF constant part
+        expf = - y(:, i-1:-1:i-options.Order) * coeff(2:end);
         
-        hm2 = hm1;
-        hm1 = temp;
-    end
-    
-    function out = bdf1(odefun,t,dt,h,hm1) %DT MUST BE FIXED
-        out = hm1 + dt * odefun(t, h);
-    end
-    
-    function out = bdf2(odefun,t,dt,h,hm1,hm2) %DT MUST BE FIXED
-        out = 4/3 * hm1 - 1/3 * hm2 + 2/3 * dt * odefun(t, h);
-    end
-    
-    function out = bdf3(odefun,t,dt,h,hm1,hm2,hm3) %DT MUST BE FIXED
-        out = 18/11 * hm1 - 9/11 * hm2 + 2/11 * hm3 + 6/11 * dt * odefun(t, h);
-    end
-    
-    function out = jacobian(odefun,t,dt,h)
-        %J_control = [I/(2*delta_t/3)+Dx*q_h];
+        % Semi implicit function interpolation
+        if isfield(options,'ExplicitFcn')
+            expfeval = options.ExplicitFcn(t(i-1:-1:i-options.Order), ...
+                y(:, i-1:-1:i-options.Order));
+            expf = expf + (t(i) - t(i-1)) * expfeval * interpCoeff;
+        end
+        % BDF implicit solve
+        y(:,i) = options.Optimmethod( ...
+            @(h) fun(h, odefun, t(i), t(i) - t(i - 1), coeff(1), expf, ...
+            options), y(:, i - 1));
+        
+        % Output handling
+        if any(isnan(y(:,i)))
+            fprintf('Nan`s in solution\n')
+            break;
+        end
     end
 end
