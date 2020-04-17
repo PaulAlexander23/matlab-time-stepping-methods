@@ -1,8 +1,12 @@
-function y = bdf3(odefun,t,y0,optimmethod)
+function y = bdf3(odefun,t,y0,options)
+    if nargin < 4
+        options = struct('optimmethod', @(fun, x0) fsolve(fun, x0, ...
+            optimoptions('fsolve', 'Display', 'off')));
+    end
     n = length(t);
     y = zeros(length(y0),n);
     
-    y(:,1:3) = bdf2(odefun,t(1:3),y0,optimmethod);
+    y(:,1:3) = bdf2(odefun,t(1:3),y0,options);
  
     function [F,J] = fun(h,odefun,i,t,y)
         if nargout == 1
@@ -16,7 +20,7 @@ function y = bdf3(odefun,t,y0,optimmethod)
     end
     
     for i = 4:n
-        y(:,i) = optimmethod(@(h) fun(h,odefun,i,t,y),y(:,i-1));
+        y(:,i) = options.optimmethod(@(h) fun(h,odefun,i,t,y),y(:,i-1));
         if any(isnan(y(:,i)))
             fprintf('Nan`s in solution\n')
             break;

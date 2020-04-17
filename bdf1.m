@@ -1,4 +1,9 @@
-function y = bdf1(odefun,t,y0,optimmethod)
+function y = bdf1(odefun,t,y0,options)
+    if nargin < 4
+        options = struct('optimmethod', @(fun, x0) fsolve(fun, x0, ...
+            optimoptions('fsolve', 'Display', 'off')));
+    end
+
     n = length(t);
     y = zeros(length(y0),n);
     
@@ -16,7 +21,7 @@ function y = bdf1(odefun,t,y0,optimmethod)
     end
     
     for i = 2:n
-        y(:,i) = optimmethod(@(h) fun(h,odefun,i,t,y),y(:,i-1));
+        y(:,i) = options.optimmethod(@(h) fun(h,odefun,i,t,y),y(:,i-1));
         
         if any(isnan(y(:,i)))
             fprintf('Nan`s in solution\n')
