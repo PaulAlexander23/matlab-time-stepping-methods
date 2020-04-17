@@ -1,4 +1,4 @@
-function tests = tests()
+function tests = testSemiImplicitSolvers()
     tests = functiontests(localfunctions);
 end
 
