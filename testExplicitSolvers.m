@@ -1,4 +1,4 @@
-function tests = tests()
+function tests = testExplicitSolvers()
     tests = functiontests(localfunctions);
 end
 
