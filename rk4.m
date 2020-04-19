@@ -1,4 +1,4 @@
-function y = rk4(odefun,t,y0)
+function [t, y] = rk4(odefun,t,y0)
     n = length(t);
     y = zeros(length(y0),n);
     
@@ -15,5 +15,5 @@ function y = rk4(odefun,t,y0)
         y(:,i+1) = y(:,i) + (k1 + 2 * k2 + 2 * k3 + k4)/6;
     end
     
-    y = y.';
+    [t, y] = functionOutputParser(t, y, nargout);
 end

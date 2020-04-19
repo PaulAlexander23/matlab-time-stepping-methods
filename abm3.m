@@ -1,4 +1,4 @@
-function y = abm3(odefun,t,y0,options)
+function [t, y] = abm3(odefun,t,y0,options)
     if nargin < 4, options = struct(); end
 
     n = length(t);
@@ -43,4 +43,5 @@ function y = abm3(odefun,t,y0,options)
         end
     end
     
+    [t, y] = functionOutputParser(t, y, nargout);
 end

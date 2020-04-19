@@ -1,4 +1,4 @@
-function y = bdf2si(explicitOdefun, implicitOdefun, t, y0, options)
+function [t, y] = bdf2si(explicitOdefun, implicitOdefun, t, y0, options)
     if nargin < 4
         options = struct('optimmethod', @(fun, x0) fsolve(fun, x0, ...
             optimoptions('fsolve', 'Display', 'off')));
@@ -7,7 +7,7 @@ function y = bdf2si(explicitOdefun, implicitOdefun, t, y0, options)
     n = length(t);
     y = zeros(length(y0), n);
 
-    y(:, 1:2) = bdf1si(explicitOdefun, implicitOdefun, t(1:2), y0, options);
+    [~, y(:, 1:2)] = bdf1si(explicitOdefun, implicitOdefun, t(1:2), y0, options);
 
     explicitCoeff = [3/2, -1/2]';
     implicitCoeff = [3/2, -2, 1/2]';
@@ -38,4 +38,6 @@ function y = bdf2si(explicitOdefun, implicitOdefun, t, y0, options)
         F = ([h, y(:, i-1:-1:i-2)] * implicitCoeff) / dt - f;
         F = F - explicitF;
     end
+
+    [t, y] = functionOutputParser(t, y, nargout);
 end

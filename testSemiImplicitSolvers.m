@@ -2,7 +2,7 @@ function tests = testSemiImplicitSolvers()
     tests = functiontests(localfunctions);
 end
 
-function testOdefunSolve(testCase)
+function testOdefunSolveOneOutput(testCase)
     explicitOdefun = @(t,y) y;
     implicitOdefun = @(t,y) -y^2;
     t = linspace(0,10,100)';
@@ -19,7 +19,31 @@ function testOdefunSolve(testCase)
     for n = 1:length(solverList)
         fprintf("Solver: %s,\n", func2str(solverList{n}));
         solution = solverList{n}(explicitOdefun, implicitOdefun, t, y0, options);
-        actual = solution;
+        actual = solution.y';
+        plot(actual);
+
+        verifyEqual(testCase, actual, expected, 'AbsTol', expectedAccuracy{n});
+    end
+end
+
+function testOdefunSolveTwoOutputs(testCase)
+    explicitOdefun = @(t,y) y;
+    implicitOdefun = @(t,y) -y^2;
+    t = linspace(0,10,100)';
+    y0 = 0.1;
+    options = struct('optimmethod', @(fun, x0) fsolve(fun, x0, ...
+        optimoptions('fsolve', 'Display', 'off')));
+
+    solverList = {@ab1be, @ab2be, @ab3cn, @bdf1si, @bdf2si, @bdf3si};
+    expectedAccuracy = {1e-8, 1e-8, 1e-8, 1e-8, 1e-8, 1e-8};
+
+    A = y0 / (1 - y0);
+    expected = A*exp(t')./(1 + A*exp(t'));
+    plot(expected); hold on;
+    for n = 1:length(solverList)
+        fprintf("Solver: %s,\n", func2str(solverList{n}));
+        [t, y] = solverList{n}(explicitOdefun, implicitOdefun, t, y0, options);
+        actual = y';
         plot(actual);
 
         verifyEqual(testCase, actual, expected, 'AbsTol', expectedAccuracy{n});
@@ -46,7 +70,7 @@ function testConvergenceRates(testCase)
         for m = 1:length(tN)
             t = linspace(0,tL,tN(m))';
             solution = solverList{n}(explicitOdefun, implicitOdefun, t, y0, options);
-            difference(m) = solution(end) - trueValue;
+            difference(m) = solution.y(end) - trueValue;
         end
 
         actual = - mean(gradient(log10(abs(difference)), log10(tN)));
@@ -74,7 +98,7 @@ function testOdefunSolveJacobian(testCase)
     for n = 1:length(solverList)
         fprintf("Solver: %s,\n", func2str(solverList{n}));
         solution = solverList{n}(explicitOdefun, @implicitOdefun, t, y0, options);
-        actual = solution;
+        actual = solution.y';
         plot(actual);
 
         verifyEqual(testCase, actual, expected, 'AbsTol', expectedAccuracy{n});
@@ -105,7 +129,7 @@ function testConvergenceRatesJacobian(testCase)
         for m = 1:length(tN)
             t = linspace(0,tL,tN(m))';
             solution = solverList{n}(explicitOdefun, @implicitOdefun, t, y0, options);
-            difference(m) = solution(end) - trueValue;
+            difference(m) = solution.y(end) - trueValue;
         end
 
         actual = - mean(gradient(log10(abs(difference)), log10(tN)));

@@ -1,4 +1,4 @@
-function y = ab3cn(explicitOdefun, implicitOdefun, t, y0, options)
+function [t, y] = ab3cn(explicitOdefun, implicitOdefun, t, y0, options)
     if nargin < 4
         options = struct('optimmethod', @(fun, x0) fsolve(fun, x0, ...
             optimoptions('fsolve', 'Display', 'off')));
@@ -31,4 +31,6 @@ function y = ab3cn(explicitOdefun, implicitOdefun, t, y0, options)
                 implicitOdefun(t(i-1), y(:, i-1))] * implicitCoeff, ...
             y(:, i-1));
     end
+
+    [t, y] = functionOutputParser(t, y, nargout);
 end

@@ -1,4 +1,4 @@
-function y = bdf1(odefun,t,y0,options)
+function [t, y] = bdf1(odefun,t,y0,options)
     if nargin < 4
         options = struct('optimmethod', @(fun, x0) fsolve(fun, x0, ...
             optimoptions('fsolve', 'Display', 'off')));
@@ -28,4 +28,6 @@ function y = bdf1(odefun,t,y0,options)
             break;
         end
     end
+
+    [t, y] = functionOutputParser(t, y, nargout);
 end
