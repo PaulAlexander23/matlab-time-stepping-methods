@@ -1,22 +1,23 @@
-function y = ab2be(odefunLinear, odefunNonlinear, t, y0, optimmethod)
+function y = ab2be(explicitOdefun, implicitOdefun, t, y0, options)
+    if nargin < 4
+        options = struct('optimmethod', @(fun, x0) fsolve(fun, x0, ...
+            optimoptions('fsolve', 'Display', 'off')));
+    end
+
     n = length(t);
     y = zeros(length(y0),n);
-    
-    %Change wind up
-    odefun = @(t, y) odefunLinear(t, y) + odefunNonlinear(t, y);
-    y(:,1) = y0;
-    y(:,2) = optimmethod(@(x) x - y(:, 1) - ...
-        (t(2) - t(1)) * odefunNonlinear(t(1), y(:, 1)) - ...
-        (t(2) - t(1)) * odefunLinear(t(2), x), ...
-        y(:, 1));
-    
-    coeff = [3/2,-1/2]';
-    
+
+    y(:,1:2) = ab1be(explicitOdefun, implicitOdefun, t(1:2), y0, options);
+
+    explicitCoeff = [3/2,-1/2]';
+    implicitCoeff = 1;
+
     for i = 3:n
-        tau = t(i) - t(i - 1);
-        y(:, i) = optimmethod(@(x) x - y(:, i-1) - ...
-            tau * odefunNonlinear(t(i-1:-1:i-2), y(:, i-1:-1:i-2)) * coeff - ...
-            tau * odefunLinear(t(i), x), ...
-            y(:, i - 1));
+        dt = t(i) - t(i - 1);
+        y(:, i) = y(:, i-1) + ...
+            dt * [explicitOdefun(t(i-1), y(:, i-1)), ...
+            explicitOdefun(t(i-2), y(:, i-2))] * explicitCoeff;
+        y(:, i) = options.optimmethod(@(x) x - y(:, i) - ...
+            dt * implicitOdefun(t(i), x) * implicitCoeff, y(:, i-1));
     end
 end
