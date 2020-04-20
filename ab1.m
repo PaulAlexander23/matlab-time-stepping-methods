@@ -1,4 +1,6 @@
-function [t, y] = ab1(odefun,t,y0)
+function [t, y] = ab1(odefun,t,y0,options)
+    if nargin < 4, options = struct(); end
+
     n = length(t);
     y = zeros(length(y0),n);
     
