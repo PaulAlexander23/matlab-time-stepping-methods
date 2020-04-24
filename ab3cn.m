@@ -7,15 +7,8 @@ function [t, y] = ab3cn(explicitOdefun, implicitOdefun, t, y0, options)
     n = length(t);
     y = zeros(length(y0),n);
     
-    y(:, 1) = y0;
-    y(:, 2) = y(:, 1) + ...
-        (t(2) - t(1)) * explicitOdefun(t(1), y(:, 1));
-    y(:, 2) = options.optimmethod(@(x) x - y(:, 2) - ...
-        (t(2) - t(1)) * implicitOdefun(t(2), x), y(:, 1));
-    y(:, 3) = y(:, 2) + ...
-        (t(3) - t(2)) * explicitOdefun(t(2:-1:1), y(:, 2:-1:1)) * [3/2, -1/2]';
-    y(:, 3) = options.optimmethod(@(x) x - y(:, 2) - ...
-        (t(3) - t(2)) * implicitOdefun(t(3), x), y(:, 2));
+    windup = ab2be(explicitOdefun, implicitOdefun, t(1:3), y0, options);
+    y(:, 1:3) = windup.y';
     
     explicitCoeff = [23/12,-4/3,5/12]';
     implicitCoeff = [3/2,-1/2]';

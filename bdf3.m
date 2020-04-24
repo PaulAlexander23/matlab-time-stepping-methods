@@ -6,7 +6,8 @@ function [t, y] = bdf3(odefun,t,y0,options)
     n = length(t);
     y = zeros(length(y0),n);
     
-    [~, y(:,1:3)] = bdf2(odefun,t(1:3),y0,options);
+    [~, y0] = bdf2(odefun,t(1:3),y0,options);
+    y(:,1:3) = y0';
  
     function [F,J] = fun(h,odefun,i,t,y)
         if nargout == 1

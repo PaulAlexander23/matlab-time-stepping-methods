@@ -7,7 +7,8 @@ function [t, y] = ab2be(explicitOdefun, implicitOdefun, t, y0, options)
     n = length(t);
     y = zeros(length(y0),n);
 
-    [~, y(:,1:2)] = ab1be(explicitOdefun, implicitOdefun, t(1:2), y0, options);
+    windup = ab1be(explicitOdefun, implicitOdefun, t(1:2), y0, options);
+    y(:,1:2) = windup.y';
 
     explicitCoeff = [3/2,-1/2]';
     implicitCoeff = 1;

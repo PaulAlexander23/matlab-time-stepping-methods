@@ -7,7 +7,8 @@ function [t, y] = bdf2si(explicitOdefun, implicitOdefun, t, y0, options)
     n = length(t);
     y = zeros(length(y0), n);
 
-    [~, y(:, 1:2)] = bdf1si(explicitOdefun, implicitOdefun, t(1:2), y0, options);
+    [~, y0] = bdf1si(explicitOdefun, implicitOdefun, t(1:2), y0, options);
+    y(:, 1:2) = y0';
 
     explicitCoeff = [3/2, -1/2]';
     implicitCoeff = [3/2, -2, 1/2]';
