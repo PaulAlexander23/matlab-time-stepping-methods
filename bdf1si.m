@@ -1,4 +1,4 @@
-function [t, y] = bdf1si(explicitOdefun, implicitOdefun, t, y0, options)
+function [t, y] = bdf1si2(explicitOdefun, implicitOdefun, t, y0, options)
     if nargin < 4
         options = struct('optimmethod', @(fun, x0) fsolve(fun, x0, ...
             optimoptions('fsolve', 'Display', 'off')));
@@ -9,12 +9,17 @@ function [t, y] = bdf1si(explicitOdefun, implicitOdefun, t, y0, options)
 
     y(:, 1) = y0;
 
-    explicitCoeff = 1;
-    implicitCoeff = [1, -1]';
+    yCoeff = [1, -1]';
+    implicitCoeff = -1;
+    explicitCoeff = -1;
 
     for i = 2:n
-        explicitF = explicitOdefun(t(i), y(:, i-1)) * explicitCoeff;
-        y(:, i) = options.optimmethod(@(h) fun(h, implicitOdefun, i, t, y, explicitF), ...
+        dt = t(i) - t(i-1);
+
+        explicitF = y(:, i-1) * yCoeff(2) + ...
+            dt * explicitOdefun(t(i-1), y(:, i-1)) * explicitCoeff;
+
+        y(:, i) = options.optimmethod(@(h) fun(implicitOdefun, t(i), h, dt, explicitF), ...
             y(:, i - 1));
 
         if any(isnan(y(:, i)))
@@ -23,19 +28,17 @@ function [t, y] = bdf1si(explicitOdefun, implicitOdefun, t, y0, options)
         end
     end
 
-    function [F, J] = fun(h, implicitOdefun, i, t, y, expf)
-        dt = t(i) - t(i-1);
-
+    function [F, J] = fun(implicitOdefun, t, h, dt, explicitF)
         if nargout == 1
-            f = implicitOdefun(t(i), h);
+            f = implicitOdefun(t, h);
         elseif nargout == 2
-            [f, j] = implicitOdefun(t(i), h);
-            J = implicitCoeff(1) * speye(length(f)) / dt - j;
+            [f, j] = implicitOdefun(t, h);
+            J = speye(length(f)) * yCoeff(1) + dt * j * implicitCoeff;
         end
         
-        F = ([h, y(:, i-1)] * implicitCoeff) / dt - f;
-        F = F - expf;
+        F = h * yCoeff(1) + dt * f * implicitCoeff + explicitF;
     end
 
     [t, y] = functionOutputParser(t, y, nargout);
 end
+

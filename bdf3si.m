@@ -7,16 +7,22 @@ function [t, y] = bdf3si(explicitOdefun, implicitOdefun, t, y0, options)
     n = length(t);
     y = zeros(length(y0), n);
 
-    [~, y0] = bdf2si(explicitOdefun, implicitOdefun, t(1:3), y0, options);
-    y(:, 1:3) = y0';
+    windup = bdf2si(explicitOdefun, implicitOdefun, t(1:3), y0, options);
+    y(:, 1:3) = windup.y';
 
-    explicitCoeff = [2, -1]';
-    implicitCoeff = [11/6, -3, 3/2, -1/3]';
+    yCoeff = [11, -18, 9, -2]'/11;
+    explicitCoeff = -[18, -18, 6]'/11;
+    implicitCoeff = -6/11;
 
     for i = 4:n
-        explicitF = [explicitOdefun(t(i-1), y(:, i-1)), ...
-            explicitOdefun(t(i-2), y(:, i-2))] * explicitCoeff;
-        y(:, i) = options.optimmethod(@(h) fun(h, implicitOdefun, i, t, y, explicitF), ...
+        dt = t(i) - t(i-1);
+
+        explicitF = y(:, i-1:-1:i-3) * yCoeff(2:end) + ...
+            dt * [explicitOdefun(t(i-1), y(:, i-1)), ...
+            explicitOdefun(t(i-2), y(:, i-2)), ...
+            explicitOdefun(t(i-3), y(:, i-3))] * explicitCoeff;
+
+        y(:, i) = options.optimmethod(@(h) fun(implicitOdefun, t(i), h, dt, explicitF), ...
             y(:, i - 1));
 
         if any(isnan(y(:, i)))
@@ -25,19 +31,17 @@ function [t, y] = bdf3si(explicitOdefun, implicitOdefun, t, y0, options)
         end
     end
 
-    function [F, J] = fun(h, implicitOdefun, i, t, y, explicitF)
-        dt = t(i) - t(i-1);
-
+    function [F, J] = fun(implicitOdefun, t, h, dt, explicitF)
         if nargout == 1
-            f = implicitOdefun(t(i), h);
+            f = implicitOdefun(t, h);
         elseif nargout == 2
-            [f, j] = implicitOdefun(t(i), h);
-            J = implicitCoeff(1) * speye(length(f)) / dt -  j;
+            [f, j] = implicitOdefun(t, h);
+            J = speye(length(f)) * yCoeff(1) + dt * j * implicitCoeff;
         end
 
-        F = ([h, y(:, i-1:-1:i-3)] * implicitCoeff) / dt - f;
-        F = F - explicitF;
+        F = h * yCoeff(1) + dt * f * implicitCoeff + explicitF;
     end
 
     [t, y] = functionOutputParser(t, y, nargout);
 end
+
