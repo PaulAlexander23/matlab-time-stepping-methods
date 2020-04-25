@@ -10,7 +10,7 @@ function testOutputStruct(testCase)
     options = struct('optimmethod', @(fun, x0) fsolve(fun, x0, ...
         optimoptions('fsolve', 'Display', 'off')));
 
-    solverList = {@ab1be, @ab2be, @ab3cn, @bdf1si, @bdf2si, @bdf3si};
+    solverList = {@ab1be, @ab2be, @ab3cn, @bdf1si, @bdf2si, @bdf3si, @bdf4si};
 
     for n = 1:length(solverList)
         fprintf("Solver: %s,\n", func2str(solverList{n}));
@@ -33,7 +33,7 @@ function testOutputMultiple(testCase)
     options = struct('optimmethod', @(fun, x0) fsolve(fun, x0, ...
         optimoptions('fsolve', 'Display', 'off')));
 
-    solverList = {@ab1be, @ab2be, @ab3cn, @bdf1si, @bdf2si, @bdf3si};
+    solverList = {@ab1be, @ab2be, @ab3cn, @bdf1si, @bdf2si, @bdf3si, @bdf4si};
 
     for n = 1:length(solverList)
         fprintf("Solver: %s,\n", func2str(solverList{n}));
@@ -54,8 +54,8 @@ function testOdefunSolveError(testCase)
     options = struct('optimmethod', @(fun, x0) fsolve(fun, x0, ...
         optimoptions('fsolve', 'Display', 'off')));
 
-    solverList = {@ab1be, @ab2be, @ab3cn, @bdf1si2, @bdf2si, @bdf3si};
-    expectedAccuracy = {6e-2, 3e-2, 4e-2, 6e-2, 4e-3, 9e-4};
+    solverList = {@ab1be, @ab2be, @ab3cn, @bdf1si, @bdf2si, @bdf3si, @bdf4si};
+    expectedAccuracy = {6e-2, 3e-2, 4e-2, 6e-2, 4e-3, 9e-4, 1e-8};
 
     A = y0 / (1 - y0);
     expected = A*exp(t')./(1 + A*exp(t'));
@@ -79,8 +79,8 @@ function testOdefunSolveConvergenceRates(testCase)
     options = struct('optimmethod', @(fun, x0) fsolve(fun, x0, ...
         optimoptions('fsolve', 'Display', 'off')));
 
-    solverList = {@ab1be, @ab2be, @ab3cn, @bdf1si, @bdf2si, @bdf3si};
-    expected = {1, 1, 2, 1, 2, 3};
+    solverList = {@ab1be, @ab2be, @ab3cn, @bdf1si, @bdf2si, @bdf3si, @bdf4si};
+    expected = {1, 1, 2, 1, 2, 3, 4};
 
     difference = zeros(length(tN),1);
     A = y0 / (1 - y0);

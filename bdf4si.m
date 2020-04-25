@@ -1,0 +1,49 @@
+function [t, y] = bdf4si(explicitOdefun, implicitOdefun, t, y0, options)
+    if nargin < 5
+        options = struct('optimmethod', @(fun, x0) fsolve(fun, x0, ...
+            optimoptions('fsolve', 'Display', 'off')));
+    end
+
+    n = length(t);
+    y = zeros(length(y0), n);
+
+    windup = bdf3si(explicitOdefun, implicitOdefun, t(1:3), y0, options);
+    y(:, 1:3) = windup.y';
+
+    yCoeff = [25, -48, 36, -16, 3]'/25;
+    explicitCoeff = -[48, -72, 48, -12]'/25;
+    implicitCoeff = -12/25;
+
+    for i = 5:n
+        dt = t(i) - t(i-1);
+
+        explicitF = y(:, i-1:-1:i-4) * yCoeff(2:end) + ...
+            dt * [explicitOdefun(t(i-1), y(:, i-1)), ...
+            explicitOdefun(t(i-2), y(:, i-2)), ...
+            explicitOdefun(t(i-3), y(:, i-3)), ...
+            explicitOdefun(t(i-4), y(:, i-4))] * explicitCoeff;
+
+        y(:, i) = options.optimmethod(@(h) fun(implicitOdefun, t(i), h, dt, explicitF), ...
+            y(:, i - 1));
+
+        if any(isnan(y(:, i)))
+            fprintf('Nan`s in solution\n')
+            break;
+        end
+    end
+
+    function [F, J] = fun(implicitOdefun, t, h, dt, explicitF)
+        if nargout == 1
+            f = implicitOdefun(t, h);
+        elseif nargout == 2
+            [f, j] = implicitOdefun(t, h);
+            J = speye(length(f)) * yCoeff(1) + dt * j * implicitCoeff;
+        end
+
+        F = h * yCoeff(1) + dt * f * implicitCoeff + explicitF;
+    end
+
+    [t, y] = functionOutputParser(t, y, nargout);
+end
+
+
