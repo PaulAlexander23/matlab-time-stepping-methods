@@ -8,8 +8,10 @@ function testOutputStruct(testCase)
     odefun = struct('explicit', explicitOdefun, 'implicit', implicitOdefun);
     t = linspace(0,1,10)';
     y0 = 1;
-    options = struct('optimmethod', @(fun, x0) fsolve(fun, x0, ...
-        optimoptions('fsolve', 'Display', 'off')));
+    myoptimoptions = optimoptions('fsolve', 'Display', 'off');
+    options = struct(...
+        'optimmethod', @fsolve, ...
+        'optimoptions', myoptimoptions);
 
     solverList = {@ab1be, @ab2be, @ab3cn, @bdf1si, @bdf2si, @bdf3si, @bdf4si};
 
@@ -32,8 +34,10 @@ function testOutputMultiple(testCase)
     odefun = struct('explicit', explicitOdefun, 'implicit', implicitOdefun);
     t = linspace(0,1,10)';
     y0 = 1;
-    options = struct('optimmethod', @(fun, x0) fsolve(fun, x0, ...
-        optimoptions('fsolve', 'Display', 'off')));
+    myoptimoptions = optimoptions('fsolve', 'Display', 'off');
+    options = struct(...
+        'optimmethod', @fsolve, ...
+        'optimoptions', myoptimoptions);
 
     solverList = {@ab1be, @ab2be, @ab3cn, @bdf1si, @bdf2si, @bdf3si, @bdf4si};
 
@@ -54,8 +58,10 @@ function testOdefunSolveError(testCase)
     odefun = struct('explicit', explicitOdefun, 'implicit', implicitOdefun);
     t = linspace(0,7,100)';
     y0 = 0.01;
-    options = struct('optimmethod', @(fun, x0) fsolve(fun, x0, ...
-        optimoptions('fsolve', 'Display', 'off')));
+    myoptimoptions = optimoptions('fsolve', 'Display', 'off');
+    options = struct(...
+        'optimmethod', @fsolve, ...
+        'optimoptions', myoptimoptions);
 
     solverList = {@ab1be, @ab2be, @ab3cn, @bdf1si, @bdf2si, @bdf3si, @bdf4si};
     expectedAccuracy = {6e-2, 3e-2, 4e-2, 6e-2, 4e-3, 9e-4, 1e-8};
@@ -80,8 +86,10 @@ function testOdefunSolveConvergenceRates(testCase)
     tN = round(logspace(2,2.7,6)); %[100, 110, 120];
     tL = 7;
     y0 = 0.01;
-    options = struct('optimmethod', @(fun, x0) fsolve(fun, x0, ...
-        optimoptions('fsolve', 'Display', 'off')));
+    myoptimoptions = optimoptions('fsolve', 'Display', 'off');
+    options = struct(...
+        'optimmethod', @fsolve, ...
+        'optimoptions', myoptimoptions);
 
     solverList = {@ab1be, @ab2be, @ab3cn, @bdf1si, @bdf2si, @bdf3si, @bdf4si};
     expected = {1, 1, 2, 1, 2, 3, 4};
@@ -99,8 +107,8 @@ function testOdefunSolveConvergenceRates(testCase)
         end
 
         actual = - mean(gradient(log10(abs(difference)), log10(tN)));
-        hold on;
-        plot(log10(tN), log10(abs(difference)));
+        % hold on;
+        % plot(log10(tN), log10(abs(difference)));
 
         verifyEqual(testCase, actual, expected{n}, 'AbsTol', 0.2);
     end
@@ -109,11 +117,17 @@ end
 
 function testOdefunSolveJacobian(testCase)
     explicitOdefun = @(t,y) y;
-    odefun = struct('explicit', explicitOdefun, 'implicit', @implicitOdefun);
+    implicitOdefun = @(t,y) -y.^2;
+    odejac = @(t,y) -2*y;
+    odefun = struct('explicit', explicitOdefun, 'implicit', implicitOdefun);
     t = linspace(0,7,100)';
     y0 = 0.01;
-    options = struct('optimmethod', @(fun, x0) fsolve(fun, x0, ...
-        optimoptions('fsolve', 'Display', 'off', 'SpecifyObjectiveGradient', true)));
+    optimmethod = @fsolve;
+    myoptimoptions = optimoptions('fsolve', 'Display', 'off', 'SpecifyObjectiveGradient', true);
+    options = struct(...
+        'optimmethod', optimmethod, ...
+        'optimoptions', myoptimoptions, ...
+        'Jacobian', odejac);
 
     solverList = {@bdf1si, @bdf2si, @bdf3si};
     expectedAccuracy = {6e-2, 4e-3, 9e-4};
@@ -127,11 +141,6 @@ function testOdefunSolveJacobian(testCase)
         actual = solution.y';
         verifyEqual(testCase, actual, expected, 'AbsTol', expectedAccuracy{n});
     end
-
-    function [f, J] = implicitOdefun(~, y)
-        f = - y.^2;
-        J = - 2 * y;
-    end
 end
 
 function testDampedOscillatorError(testCase)
@@ -141,8 +150,10 @@ function testDampedOscillatorError(testCase)
     odefun = struct('explicit', explicitOdefun, 'implicit', implicitOdefun);
     t = linspace(0,(2.25)*pi,500)';
     y0 = [1;-b];
-    options = struct('optimmethod', @(fun, x0) fsolve(fun, x0, ...
-        optimoptions('fsolve', 'Display', 'off')));
+    myoptimoptions = optimoptions('fsolve', 'Display', 'off');
+    options = struct(...
+        'optimmethod', @fsolve, ...
+        'optimoptions', myoptimoptions);
 
     solverList = {@ab1be, @ab2be, @ab3cn, @bdf1si, @bdf2si, @bdf3si};
     expectedAccuracy = {9e-2, 9e-2, 2e-1, 9e-2, 2e-3, 3e-4};
@@ -175,8 +186,10 @@ function testDampedOscillatorConvergence(testCase)
     tN = round(logspace(2.5,3.5,4)); %[100, 110, 120];
     tL = (2.25)*pi;
     y0 = [1;-b];
-    options = struct('optimmethod', @(fun, x0) fsolve(fun, x0, ...
-        optimoptions('fsolve', 'Display', 'off')));
+    myoptimoptions = optimoptions('fsolve', 'Display', 'off');
+    options = struct(...
+        'optimmethod', @fsolve, ...
+        'optimoptions', myoptimoptions);
 
     solverList = {@ab1be, @ab2be, @ab3cn, @bdf1si, @bdf2si, @bdf3si};
     expected = {1, 1, 2, 1, 2, 3};

@@ -63,8 +63,8 @@ function testConvergenceRates(testCase)
         end
 
         actual = - mean(gradient(log10(abs(difference)), log10(tN)));
-        hold on;
-        plot(log10(tN), log10(abs(difference)));
+        % hold on;
+        % plot(log10(tN), log10(abs(difference)));
 
         verifyEqual(testCase, actual, expected{n}, 'AbsTol', 0.1);
     end
