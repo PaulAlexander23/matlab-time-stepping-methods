@@ -9,19 +9,17 @@ function [t, y] = bdf1(odefun,t,y0,options)
     
     y(:,1) = y0;
     
-    function [F,J] = fun(h,odefun,i,t,y)
-        if nargout == 1
-            f = odefun(t,h);
-            F = (h - y(:,i-1))/(t(i)-t(i-1)) - f;
-        elseif nargout == 2
-            [f, j] = odefun(t,h);
-            F = (h - y(:,i-1))/(t(i)-t(i-1)) - f;
-            J = speye(length(f))/(t(i)-t(i-1)) - j;
-        end
-    end
-    
+    yCoeff = [1, -1]';
+    fCoeff = -1;
+
     for i = 2:n
-        y(:,i) = options.optimmethod(@(h) fun(h,odefun,i,t,y),y(:,i-1));
+        dt = t(i) - t(i-1);
+
+        explicitF = y(:,i-1) * yCoeff(2);
+
+        y(:,i) = options.optimmethod( ...
+            @(h) fun(odefun, t(i), h, dt, explicitF, options), ...
+            y(:,i-1));
         
         if any(isnan(y(:,i)))
             fprintf('Nan`s in solution\n')
@@ -29,5 +27,15 @@ function [t, y] = bdf1(odefun,t,y0,options)
         end
     end
 
+    function [F,J] = fun(odefun, t, h, dt, explicitF, options)
+        f = odefun(t,h);
+        F = h * yCoeff(1) + dt * f * fCoeff(1) + explicitF;
+
+        if nargout == 2
+            j = options.Jacobian(t,h);
+            J = speye(length(h)) * yCoeff(1) + dt * j * fCoeff(1);
+        end
+    end
+    
     [t, y] = functionOutputParser(t, y, nargout);
 end
