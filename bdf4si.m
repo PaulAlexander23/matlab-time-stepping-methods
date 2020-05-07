@@ -1,8 +1,8 @@
 function [t, y] = bdf4si(odefun, t, y0, options)
     if nargin < 4
-        optimopts = optimoptions('fsolve', 'Display', 'off');
-        options = struct('optimmethod', @fsolve, 'optimoptions', optimopts);
+        options = odeset();
     end
+    options = ensureSolverSet(options);
 
     n = length(t);
     y = zeros(length(y0), n);

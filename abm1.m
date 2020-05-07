@@ -1,5 +1,5 @@
 function [t, y] = abm1(odefun,t,y0,options)
-    if nargin < 4, options = struct(); end
+    if nargin < 4, options = odeset(); end
 
     n = length(t);
     y = zeros(length(y0),n);

@@ -1,8 +1,9 @@
 function [t, y] = bdf3(odefun,t,y0,options)
     if nargin < 4
-        options = struct('optimmethod', @(fun, x0) fsolve(fun, x0, ...
-            optimoptions('fsolve', 'Display', 'off')));
+        options = odeset();
     end
+    options = ensureSolverSet(options);
+
     n = length(t);
     y = zeros(length(y0),n);
     
@@ -21,7 +22,11 @@ function [t, y] = bdf3(odefun,t,y0,options)
     end
     
     for i = 4:n
-        y(:,i) = options.optimmethod(@(h) fun(h,odefun,i,t,y),y(:,i-1));
+        y(:,i) = options.optimmethod( ...
+            @(h) fun(h,odefun,i,t,y), ...
+            y(:,i-1), ...
+            options.optimoptions);
+
         if any(isnan(y(:,i)))
             fprintf('Nan`s in solution\n')
             break;

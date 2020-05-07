@@ -2,6 +2,29 @@ function tests = testSemiImplicitSolvers()
     tests = functiontests(localfunctions);
 end
 
+function testInputDefaults(testCase)
+    explicitOdefun = @(t,y) 1;
+    implicitOdefun = @(t,y) -1;
+    odefun = struct('explicit', explicitOdefun, 'implicit', implicitOdefun);
+    t = linspace(0,1,10)';
+    y0 = 1;
+    options = odeset();
+
+    solverList = {@ab1be, @ab2be, @ab3cn, @bdf1si, @bdf2si, @bdf3si, @bdf4si};
+
+    for n = 1:length(solverList)
+        fprintf("Solver: %s,\n", func2str(solverList{n}));
+        solution = solverList{n}(odefun, t, y0, options);
+
+        expected = t;
+        actual = solution.x;
+        verifyEqual(testCase, actual, expected);
+
+        actual = solution.y';
+        verifySize(testCase, actual, [length(y0),length(t)]);
+    end
+end
+
 function testOutputStruct(testCase)
     explicitOdefun = @(t,y) 1;
     implicitOdefun = @(t,y) -1;
