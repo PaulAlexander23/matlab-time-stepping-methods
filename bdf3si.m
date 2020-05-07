@@ -1,4 +1,4 @@
-function [t, y] = bdf3si(explicitOdefun, implicitOdefun, t, y0, options)
+function [t, y] = bdf3si(odefun, t, y0, options)
     if nargin < 5
         options = struct('optimmethod', @(fun, x0) fsolve(fun, x0, ...
             optimoptions('fsolve', 'Display', 'off')));
@@ -7,7 +7,7 @@ function [t, y] = bdf3si(explicitOdefun, implicitOdefun, t, y0, options)
     n = length(t);
     y = zeros(length(y0), n);
 
-    windup = bdf2si(explicitOdefun, implicitOdefun, t(1:3), y0, options);
+    windup = bdf2si(odefun, t(1:3), y0, options);
     y(:, 1:3) = windup.y';
 
     yCoeff = [11, -18, 9, -2]'/11;
@@ -18,11 +18,11 @@ function [t, y] = bdf3si(explicitOdefun, implicitOdefun, t, y0, options)
         dt = t(i) - t(i-1);
 
         explicitF = y(:, i-1:-1:i-3) * yCoeff(2:end) + ...
-            dt * [explicitOdefun(t(i-1), y(:, i-1)), ...
-            explicitOdefun(t(i-2), y(:, i-2)), ...
-            explicitOdefun(t(i-3), y(:, i-3))] * explicitCoeff;
+            dt * [odefun.explicit(t(i-1), y(:, i-1)), ...
+            odefun.explicit(t(i-2), y(:, i-2)), ...
+            odefun.explicit(t(i-3), y(:, i-3))] * explicitCoeff;
 
-        y(:, i) = options.optimmethod(@(h) fun(implicitOdefun, t(i), h, dt, explicitF), ...
+        y(:, i) = options.optimmethod(@(h) fun(odefun.implicit, t(i), h, dt, explicitF), ...
             y(:, i - 1));
 
         if any(isnan(y(:, i)))

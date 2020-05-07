@@ -5,6 +5,7 @@ end
 function testOutputStruct(testCase)
     explicitOdefun = @(t,y) 1;
     implicitOdefun = @(t,y) -1;
+    odefun = struct('explicit', explicitOdefun, 'implicit', implicitOdefun);
     t = linspace(0,1,10)';
     y0 = 1;
     options = struct('optimmethod', @(fun, x0) fsolve(fun, x0, ...
@@ -14,7 +15,7 @@ function testOutputStruct(testCase)
 
     for n = 1:length(solverList)
         fprintf("Solver: %s,\n", func2str(solverList{n}));
-        solution = solverList{n}(explicitOdefun, implicitOdefun, t, y0, options);
+        solution = solverList{n}(odefun, t, y0, options);
 
         expected = t;
         actual = solution.x;
@@ -28,6 +29,7 @@ end
 function testOutputMultiple(testCase)
     explicitOdefun = @(t,y) 1;
     implicitOdefun = @(t,y) -1;
+    odefun = struct('explicit', explicitOdefun, 'implicit', implicitOdefun);
     t = linspace(0,1,10)';
     y0 = 1;
     options = struct('optimmethod', @(fun, x0) fsolve(fun, x0, ...
@@ -37,7 +39,7 @@ function testOutputMultiple(testCase)
 
     for n = 1:length(solverList)
         fprintf("Solver: %s,\n", func2str(solverList{n}));
-        [actualT, actualY] = solverList{n}(explicitOdefun, implicitOdefun, t, y0, options);
+        [actualT, actualY] = solverList{n}(odefun, t, y0, options);
 
         expected = t;
         verifyEqual(testCase, actualT, expected);
@@ -49,6 +51,7 @@ end
 function testOdefunSolveError(testCase)
     explicitOdefun = @(t,y) y;
     implicitOdefun = @(t,y) -y^2;
+    odefun = struct('explicit', explicitOdefun, 'implicit', implicitOdefun);
     t = linspace(0,7,100)';
     y0 = 0.01;
     options = struct('optimmethod', @(fun, x0) fsolve(fun, x0, ...
@@ -62,7 +65,7 @@ function testOdefunSolveError(testCase)
     % plot(expected); hold on;
     for n = 1:length(solverList)
         fprintf("Solver: %s,\n", func2str(solverList{n}));
-        solution = solverList{n}(explicitOdefun, implicitOdefun, t, y0, options);
+        solution = solverList{n}(odefun, t, y0, options);
         actual = solution.y';
         % plot(actual);
 
@@ -73,6 +76,7 @@ end
 function testOdefunSolveConvergenceRates(testCase)
     explicitOdefun = @(t,y) y;
     implicitOdefun = @(t,y) -y^2;
+    odefun = struct('explicit', explicitOdefun, 'implicit', implicitOdefun);
     tN = round(logspace(2,2.7,6)); %[100, 110, 120];
     tL = 7;
     y0 = 0.01;
@@ -90,7 +94,7 @@ function testOdefunSolveConvergenceRates(testCase)
 
         for m = 1:length(tN)
             t = linspace(0,tL,tN(m))';
-            solution = solverList{n}(explicitOdefun, implicitOdefun, t, y0, options);
+            solution = solverList{n}(odefun, t, y0, options);
             difference(m) = solution.y(end) - trueValue;
         end
 
@@ -105,6 +109,7 @@ end
 
 function testOdefunSolveJacobian(testCase)
     explicitOdefun = @(t,y) y;
+    odefun = struct('explicit', explicitOdefun, 'implicit', @implicitOdefun);
     t = linspace(0,7,100)';
     y0 = 0.01;
     options = struct('optimmethod', @(fun, x0) fsolve(fun, x0, ...
@@ -117,7 +122,7 @@ function testOdefunSolveJacobian(testCase)
     expected = A*exp(t')./(1 + A*exp(t'));
     for n = 1:length(solverList)
         fprintf("Solver: %s,\n", func2str(solverList{n}));
-        solution = solverList{n}(explicitOdefun, @implicitOdefun, t, y0, options);
+        solution = solverList{n}(odefun, t, y0, options);
 
         actual = solution.y';
         verifyEqual(testCase, actual, expected, 'AbsTol', expectedAccuracy{n});
@@ -133,6 +138,7 @@ function testDampedOscillatorError(testCase)
     b = -0.1;
     explicitOdefun = @(t,y) [0; -2 * b * y(2)];
     implicitOdefun = @(t,y) [y(2); -y(1)];
+    odefun = struct('explicit', explicitOdefun, 'implicit', implicitOdefun);
     t = linspace(0,(2.25)*pi,500)';
     y0 = [1;-b];
     options = struct('optimmethod', @(fun, x0) fsolve(fun, x0, ...
@@ -149,7 +155,7 @@ function testDampedOscillatorError(testCase)
     % plot(t, expected(2,:));
     for n = 1:length(solverList)
         fprintf("Solver: %s,\n", func2str(solverList{n}));
-        solution = solverList{n}(explicitOdefun, implicitOdefun, t, y0, options);
+        solution = solverList{n}(odefun, t, y0, options);
         actual = solution.y';
 
         % figure(1);
@@ -165,6 +171,7 @@ function testDampedOscillatorConvergence(testCase)
     b = -0.1;
     explicitOdefun = @(t,y) [0; -2 * b * y(2)];
     implicitOdefun = @(t,y) [y(2); -y(1)];
+    odefun = struct('explicit', explicitOdefun, 'implicit', implicitOdefun);
     tN = round(logspace(2.5,3.5,4)); %[100, 110, 120];
     tL = (2.25)*pi;
     y0 = [1;-b];
@@ -182,7 +189,7 @@ function testDampedOscillatorConvergence(testCase)
 
         for m = 1:length(tN)
             t = linspace(0,tL,tN(m))';
-            solution = solverList{n}(explicitOdefun, implicitOdefun, t, y0, options);
+            solution = solverList{n}(odefun, t, y0, options);
             difference(:,m) = solution.y(end,:)' - trueValue;
         end
 
