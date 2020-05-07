@@ -73,5 +73,30 @@ function testConvergenceRates(testCase)
 
         verifyEqual(testCase, actual, expected{n}, 'AbsTol', 0.1);
     end
+end
 
+function testExponentialDecayJacobian(testCase)
+    epsilon = 1;
+    odefun = @(t, y) - epsilon * y;
+    odejac = @(t, y) - epsilon;
+    t = linspace(0,1,10)';
+    y0 = 1;
+    optimmethod = @(fun, x0) fsolve(fun, x0, ...
+            optimoptions('fsolve', 'Display', 'off', 'SpecifyObjectiveGradient',true));
+    options = struct( ...
+        'optimmethod', optimmethod ...
+        ,'Jacobian', odejac ...
+        );
+
+    solverList = {@bdf1};
+    expectedAccuracy = {2e-2};
+
+    expected = exp(- epsilon * t(end));
+    for n = 1:length(solverList)
+        fprintf("Solver: %s,\n", func2str(solverList{n}));
+        solution = solverList{n}(odefun, t, y0, options);
+        actual = solution.y(end);
+
+        verifyEqual(testCase, actual, expected, 'AbsTol', expectedAccuracy{n});
+    end
 end
