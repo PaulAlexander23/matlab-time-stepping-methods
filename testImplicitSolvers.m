@@ -2,13 +2,35 @@ function tests = testImplicitSolvers()
     tests = functiontests(localfunctions);
 end
 
+function testExponentialDecayInputDefaults(testCase)
+    epsilon = 1;
+    odefun = @(t, y) - epsilon * y;
+    t = linspace(0,1,10)';
+    y0 = 1;
+    options = odeset();
+
+    solverList = {@am1, @am2, @am3, @abm1, @abm2, @abm3, @bdf1, @bdf2, @bdf3};
+    expectedAccuracy = {2e-2, 4e-4, 3e-5, 2e-2, 4e-4, 7e-5, 2e-2, 3e-2, 3e-2};
+
+    expected = exp(- epsilon * t(end));
+    for n = 1:length(solverList)
+        fprintf("Solver: %s,\n", func2str(solverList{n}));
+        solution = solverList{n}(odefun, t, y0, options);
+        actual = solution.y(end);
+
+        verifyEqual(testCase, actual, expected, 'AbsTol', expectedAccuracy{n});
+    end
+end
+
 function testExponentialDecayOneOutput(testCase)
     epsilon = 1;
     odefun = @(t, y) - epsilon * y;
     t = linspace(0,1,10)';
     y0 = 1;
-    options = struct('optimmethod', @(fun, x0) fsolve(fun, x0, ...
-        optimoptions('fsolve', 'Display', 'off')));
+    myoptimoptions = optimoptions('fsolve', 'Display', 'off');
+    options = struct(...
+        'optimmethod', @fsolve, ...
+        'optimoptions', myoptimoptions);
 
     solverList = {@am1, @am2, @am3, @abm1, @abm2, @abm3, @bdf1, @bdf2, @bdf3};
     expectedAccuracy = {2e-2, 4e-4, 3e-5, 2e-2, 4e-4, 7e-5, 2e-2, 3e-2, 3e-2};
@@ -28,8 +50,10 @@ function testExponentialDecayTwoOutputs(testCase)
     odefun = @(t, y) - epsilon * y;
     t = linspace(0,1,10)';
     y0 = 1;
-    options = struct('optimmethod', @(fun, x0) fsolve(fun, x0, ...
-        optimoptions('fsolve', 'Display', 'off')));
+    myoptimoptions = optimoptions('fsolve', 'Display', 'off');
+    options = struct(...
+        'optimmethod', @fsolve, ...
+        'optimoptions', myoptimoptions);
 
     solverList = {@am1, @am2, @am3, @abm1, @abm2, @abm3, @bdf1, @bdf2, @bdf3};
     expectedAccuracy = {2e-2, 4e-4, 3e-5, 2e-2, 4e-4, 7e-5, 2e-2, 3e-2, 3e-2};
@@ -50,8 +74,10 @@ function testConvergenceRates(testCase)
     tN = round(logspace(2,2.5,6)); %[100, 110, 120];
     tL = 1;
     y0 = 1;
-    options = struct('optimmethod', @(fun, x0) fsolve(fun, x0, ...
-        optimoptions('fsolve', 'Display', 'off')));
+    myoptimoptions = optimoptions('fsolve', 'Display', 'off');
+    options = struct(...
+        'optimmethod', @fsolve, ...
+        'optimoptions', myoptimoptions);
 
     solverList = {@am1, @am2, @am3, @abm1, @abm2, @abm3, @bdf1, @bdf2, @bdf3};
     expected = {1, 2, 3, 1, 2, 3, 1, 2, 3};
