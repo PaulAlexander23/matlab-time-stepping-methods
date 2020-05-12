@@ -8,8 +8,8 @@ function testExponentialDecaySingleOutput(testCase)
     odefun = @(t, y) - epsilon * y;
     t = linspace(0,1,10)';
 
-    solverList = {@ab1, @ab2, @ab3, @rk4};
-    expectedAccuracy = {1e-1, 1e-2, 1e-2, 1e-6};
+    solverList = {@ab1, @ab2, @rk4};
+    expectedAccuracy = {1e-1, 1e-2, 1e-6};
 
     expected = exp(- epsilon * t(end));
     for n = 1:length(solverList)
@@ -27,8 +27,8 @@ function testExponentialDecayTwoOutputs(testCase)
     odefun = @(t, y) - epsilon * y;
     t = linspace(0,1,10)';
 
-    solverList = {@ab1, @ab2, @ab3, @rk4};
-    expectedAccuracy = {1e-1, 1e-2, 1e-2, 1e-6};
+    solverList = {@ab1, @ab2, @rk4};
+    expectedAccuracy = {1e-1, 1e-2, 1e-6};
 
     expected = exp(- epsilon * t(end));
     for n = 1:length(solverList)
@@ -47,8 +47,8 @@ function testConvergenceRates(testCase)
     tN = round(logspace(2,3,6)); %[100, 110, 120];
     tL = 1;
 
-    solverList = {@ab1, @ab2, @ab3, @rk4};
-    expected = {1, 2, 3, 4};
+    solverList = {@ab1, @ab2, @rk4};
+    expected = {1, 2, 4};
 
     difference = zeros(length(tN),1);
     trueValue = exp(- epsilon * tL);

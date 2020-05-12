@@ -10,7 +10,7 @@ function testInputDefaults(testCase)
     y0 = 1;
     options = odeset();
 
-    solverList = {@ab1be, @ab2be, @ab3cn, @bdf1si, @bdf2si, @bdf3si, @bdf4si};
+    solverList = {@ab1be, @ab2be, @bdf1si, @bdf2si};
 
     for n = 1:length(solverList)
         fprintf("Solver: %s,\n", func2str(solverList{n}));
@@ -36,7 +36,7 @@ function testOutputStruct(testCase)
         'optimmethod', @fsolve, ...
         'optimoptions', myoptimoptions);
 
-    solverList = {@ab1be, @ab2be, @ab3cn, @bdf1si, @bdf2si, @bdf3si, @bdf4si};
+    solverList = {@ab1be, @ab2be, @bdf1si, @bdf2si};
 
     for n = 1:length(solverList)
         fprintf("Solver: %s,\n", func2str(solverList{n}));
@@ -62,7 +62,7 @@ function testOutputMultiple(testCase)
         'optimmethod', @fsolve, ...
         'optimoptions', myoptimoptions);
 
-    solverList = {@ab1be, @ab2be, @ab3cn, @bdf1si, @bdf2si, @bdf3si, @bdf4si};
+    solverList = {@ab1be, @ab2be, @bdf1si, @bdf2si};
 
     for n = 1:length(solverList)
         fprintf("Solver: %s,\n", func2str(solverList{n}));
@@ -86,8 +86,8 @@ function testOdefunSolveError(testCase)
         'optimmethod', @fsolve, ...
         'optimoptions', myoptimoptions);
 
-    solverList = {@ab1be, @ab2be, @ab3cn, @bdf1si, @bdf2si, @bdf3si, @bdf4si};
-    expectedAccuracy = {6e-2, 3e-2, 4e-2, 6e-2, 4e-3, 9e-4, 1e-8};
+    solverList = {@ab1be, @ab2be, @bdf1si, @bdf2si};
+    expectedAccuracy = {6e-2, 3e-2, 6e-2, 4e-3};
 
     A = y0 / (1 - y0);
     expected = A*exp(t')./(1 + A*exp(t'));
@@ -114,8 +114,8 @@ function testOdefunSolveConvergenceRates(testCase)
         'optimmethod', @fsolve, ...
         'optimoptions', myoptimoptions);
 
-    solverList = {@ab1be, @ab2be, @ab3cn, @bdf1si, @bdf2si, @bdf3si, @bdf4si};
-    expected = {1, 1, 2, 1, 2, 3, 4};
+    solverList = {@ab1be, @ab2be, @bdf1si, @bdf2si};
+    expected = {1, 1, 1, 2};
 
     difference = zeros(length(tN),1);
     A = y0 / (1 - y0);
@@ -133,7 +133,7 @@ function testOdefunSolveConvergenceRates(testCase)
         % hold on;
         % plot(log10(tN), log10(abs(difference)));
 
-        verifyEqual(testCase, actual, expected{n}, 'AbsTol', 0.2);
+        verifyTrue(testCase, actual > expected{n} - 0.2);
     end
 
 end
@@ -152,8 +152,8 @@ function testOdefunSolveJacobian(testCase)
         'optimoptions', myoptimoptions, ...
         'Jacobian', odejac);
 
-    solverList = {@bdf1si, @bdf2si, @bdf3si};
-    expectedAccuracy = {6e-2, 4e-3, 9e-4};
+    solverList = {@bdf1si, @bdf2si};
+    expectedAccuracy = {6e-2, 4e-3};
 
     A = y0 / (1 - y0);
     expected = A*exp(t')./(1 + A*exp(t'));
@@ -178,8 +178,8 @@ function testDampedOscillatorError(testCase)
         'optimmethod', @fsolve, ...
         'optimoptions', myoptimoptions);
 
-    solverList = {@ab1be, @ab2be, @ab3cn, @bdf1si, @bdf2si, @bdf3si};
-    expectedAccuracy = {9e-2, 9e-2, 2e-1, 9e-2, 2e-3, 3e-4};
+    solverList = {@ab1be, @ab2be, @bdf1si, @bdf2si};
+    expectedAccuracy = {9e-2, 9e-2, 9e-2, 2e-3};
 
     B = sqrt(1-b^2);
     expected = [exp(-b * t') .* cos(B*t'); -b * exp(-b * t') .* cos(B*t') - B*exp(-b * t') .* sin(B*t')];
@@ -214,8 +214,8 @@ function testDampedOscillatorConvergence(testCase)
         'optimmethod', @fsolve, ...
         'optimoptions', myoptimoptions);
 
-    solverList = {@ab1be, @ab2be, @ab3cn, @bdf1si, @bdf2si, @bdf3si};
-    expected = {1, 1, 2, 1, 2, 3};
+    solverList = {@ab1be, @ab2be, @bdf1si, @bdf2si};
+    expected = {1, 1, 1, 2};
 
     difference = zeros(length(y0), length(tN));
     B = sqrt(1-b^2);

@@ -9,8 +9,8 @@ function testExponentialDecayInputDefaults(testCase)
     y0 = 1;
     options = odeset();
 
-    solverList = {@am1, @am2, @am3, @abm1, @abm2, @abm3, @bdf1, @bdf2, @bdf3};
-    expectedAccuracy = {2e-2, 4e-4, 3e-5, 2e-2, 4e-4, 7e-5, 2e-2, 3e-2, 3e-2};
+    solverList = {@am1, @am2, @am3, @abm1, @abm2, @abm3, @bdf1, @bdf2};
+    expectedAccuracy = {2e-2, 4e-4, 3e-5, 2e-2, 4e-4, 7e-5, 2e-2, 3e-2};
 
     expected = exp(- epsilon * t(end));
     for n = 1:length(solverList)
@@ -32,8 +32,8 @@ function testExponentialDecayOneOutput(testCase)
         'optimmethod', @fsolve, ...
         'optimoptions', myoptimoptions);
 
-    solverList = {@am1, @am2, @am3, @abm1, @abm2, @abm3, @bdf1, @bdf2, @bdf3};
-    expectedAccuracy = {2e-2, 4e-4, 3e-5, 2e-2, 4e-4, 7e-5, 2e-2, 3e-2, 3e-2};
+    solverList = {@am1, @am2, @am3, @abm1, @abm2, @abm3, @bdf1, @bdf2};
+    expectedAccuracy = {2e-2, 4e-4, 3e-5, 2e-2, 4e-4, 7e-5, 2e-2, 3e-2};
 
     expected = exp(- epsilon * t(end));
     for n = 1:length(solverList)
@@ -55,8 +55,8 @@ function testExponentialDecayTwoOutputs(testCase)
         'optimmethod', @fsolve, ...
         'optimoptions', myoptimoptions);
 
-    solverList = {@am1, @am2, @am3, @abm1, @abm2, @abm3, @bdf1, @bdf2, @bdf3};
-    expectedAccuracy = {2e-2, 4e-4, 3e-5, 2e-2, 4e-4, 7e-5, 2e-2, 3e-2, 3e-2};
+    solverList = {@am1, @am2, @am3, @abm1, @abm2, @abm3, @bdf1, @bdf2};
+    expectedAccuracy = {2e-2, 4e-4, 3e-5, 2e-2, 4e-4, 7e-5, 2e-2, 3e-2};
 
     expected = exp(- epsilon * t(end));
     for n = 1:length(solverList)
@@ -79,8 +79,8 @@ function testConvergenceRates(testCase)
         'optimmethod', @fsolve, ...
         'optimoptions', myoptimoptions);
 
-    solverList = {@am1, @am2, @am3, @abm1, @abm2, @abm3, @bdf1, @bdf2, @bdf3};
-    expected = {1, 2, 3, 1, 2, 3, 1, 2, 3};
+    solverList = {@am1, @am2, @am3, @abm1, @abm2, @abm3, @bdf1, @bdf2};
+    expected = {1, 2, 3, 1, 2, 3, 1, 2};
 
     difference = zeros(length(tN),1);
     trueValue = exp(- epsilon * tL);
