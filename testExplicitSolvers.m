@@ -40,6 +40,51 @@ function testExponentialDecayTwoOutputs(testCase)
     end
 end
 
+function testOutputtingAtSpecifiedTimepointsEqualSteps(testCase)
+    y0 = 1;
+    epsilon = 1;
+    odefun = @(t, y) - epsilon * y;
+    t = linspace(0,1,11)';
+    options = odeset('MaxStep',0.02);
+
+    solverList = {@ab1, @ab2, @rk4};
+    expectedAccuracy = {1e-1, 1e-2, 1e-6};
+
+    expected = exp(- epsilon * t(end));
+    for n = 1:length(solverList)
+        fprintf("Solver: %s,\n", func2str(solverList{n}));
+        solution = solverList{n}(odefun, t, y0, options);
+        actual = solution.y(end)';
+
+        verifyEqual(testCase, actual, expected, 'AbsTol', expectedAccuracy{n});
+    end
+end
+
+function testOutputtingAtSpecifiedTimepointsUnequalSteps(testCase)
+    y0 = 1;
+    epsilon = 1;
+    odefun = @(t, y) - epsilon * y;
+    t = linspace(0,1,10)';
+    options = odeset('MaxStep',0.03);
+
+    solverList = {@ab1, @ab2, @rk4};
+    expectedAccuracy = {1e-1, 1e-2, 1e-6};
+    errors = {true, true, false};
+
+    expected = exp(- epsilon * t(end));
+    for n = 1:length(solverList)
+        fprintf("Solver: %s,\n", func2str(solverList{n}));
+        try
+            solution = solverList{n}(odefun, t, y0, options);
+            actual = solution.y(end)';
+
+            verifyEqual(testCase, actual, expected, 'AbsTol', expectedAccuracy{n});
+        catch testError
+            verifyTrue(testCase, errors{n});
+        end
+    end
+end
+
 function testConvergenceRates(testCase)
     y0 = 1;
     epsilon = 1;

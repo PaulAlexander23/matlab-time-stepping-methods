@@ -1,19 +1,28 @@
-function [t, y] = rk4(odefun,t,y0)
-    n = length(t);
-    y = zeros(length(y0),n);
+function [tOut, y] = rk4(odefun, tOut, yn, options)
+    if nargin < 4, options = odeset(); end
+
+    n = length(tOut);
+    y = zeros(length(yn),n);
     
-    y(:,1) = y0;
+    [t, saveIndices] = timepointsWithMaxStep(tOut, options);
+
+    y(:,1) = yn;
+    j = 2;
     
-    for i = 1:n-1
-        h = t(i+1)-t(i);
+    for i = 2:length(t)
+        h = t(i)-t(i-1);
+        k1 = h * odefun(t(i-1), yn);
+        k2 = h * odefun(t(i-1) + h/2, yn + k1/2);
+        k3 = h * odefun(t(i-1) + h/2, yn + k2/2);
+        k4 = h * odefun(t(i-1) + h, yn + k3);
         
-        k1 = h * odefun(t(i), y(:,i));
-        k2 = h * odefun(t(i) + h/2, y(:,i) + k1/2);
-        k3 = h * odefun(t(i) + h/2, y(:,i) + k2/2);
-        k4 = h * odefun(t(i) + h, y(:,i) + k3);
-        
-        y(:,i+1) = y(:,i) + (k1 + 2 * k2 + 2 * k3 + k4)/6;
+        yn = yn + (k1 + 2 * k2 + 2 * k3 + k4)/6;
+
+        if i == saveIndices(j)
+            y(:,j) = yn;
+            j = j + 1;
+        end
     end
     
-    [t, y] = functionOutputParser(t, y, nargout);
+    [tOut, y] = functionOutputParser(tOut, y, nargout);
 end
