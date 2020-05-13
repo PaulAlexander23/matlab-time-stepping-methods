@@ -64,12 +64,12 @@ function testOutputtingAtSpecifiedTimepointsUnequalSteps(testCase)
     y0 = 1;
     epsilon = 1;
     odefun = @(t, y) - epsilon * y;
-    t = linspace(0,1,10)';
+    t = linspace(0,1,11)';
     options = odeset('MaxStep',0.03);
 
     solverList = {@ab1, @ab2, @rk4};
     expectedAccuracy = {1e-1, 1e-2, 1e-6};
-    errors = {true, true, false};
+    errors = {false, true, false};
 
     expected = exp(- epsilon * t(end));
     for n = 1:length(solverList)
@@ -79,6 +79,7 @@ function testOutputtingAtSpecifiedTimepointsUnequalSteps(testCase)
             actual = solution.y(end)';
 
             verifyEqual(testCase, actual, expected, 'AbsTol', expectedAccuracy{n});
+            verifyTrue(testCase, ~errors{n});
         catch testError
             verifyTrue(testCase, errors{n});
         end

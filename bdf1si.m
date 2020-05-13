@@ -1,30 +1,38 @@
-function [t, y] = bdf1si(odefun, t, y0, options)
+function [tOut, y] = bdf1si(odefun, tOut, yn, options)
     if nargin < 4
         options = odeset();
     end
     options = ensureSolverSet(options);
 
-    n = length(t);
-    y = zeros(length(y0), n);
+    n = length(tOut);
+    y = zeros(length(yn), n);
 
-    y(:, 1) = y0;
+    [t, saveIndices] = timepointsWithMaxStep(tOut, options);
+
+    y(:, 1) = yn;
+    j = 2;
 
     yCoeff = [1, -1]';
     implicitCoeff = -1;
     explicitCoeff = -1;
 
-    for i = 2:n
+    for i = 2:length(t)
         dt = t(i) - t(i-1);
 
-        explicitF = y(:, i-1) * yCoeff(2) + ...
-            dt * odefun.explicit(t(i-1), y(:, i-1)) * explicitCoeff;
+        explicitF = yn * yCoeff(2) + ...
+            dt * odefun.explicit(t(i-1), yn) * explicitCoeff;
 
-        y(:, i) = options.optimmethod( ...
+        yn = options.optimmethod( ...
             @(h) fun(odefun.implicit, t(i), h, dt, explicitF, options), ...
-            y(:, i - 1), ...
+            yn, ...
             options.optimoptions);
 
-        if any(isnan(y(:, i)))
+        if i == saveIndices(j)
+            y(:,j) = yn;
+            j = j + 1;
+        end
+
+        if any(isnan(yn))
             fprintf('Nan`s in solution\n')
             break;
         end
@@ -35,11 +43,11 @@ function [t, y] = bdf1si(odefun, t, y0, options)
         F = h * yCoeff(1) + dt * f * implicitCoeff + explicitF;
 
         if nargout == 2
-            j = options.Jacobian(t, h);
-            J = speye(length(f)) * yCoeff(1) + dt * j * implicitCoeff;
+            jac = options.Jacobian(t, h);
+            J = speye(length(f)) * yCoeff(1) + dt * jac * implicitCoeff;
         end
     end
 
-    [t, y] = functionOutputParser(t, y, nargout);
+    [tOut, y] = functionOutputParser(tOut, y, nargout);
 end
 

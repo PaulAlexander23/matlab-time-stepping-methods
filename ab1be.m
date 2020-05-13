@@ -1,26 +1,35 @@
-function [t, y] = ab1be(odefun, t, y0, options)
+function [tOut, y] = ab1be(odefun, tOut, yn, options)
     if nargin < 4
         options = odeset();
     end
     options = ensureSolverSet(options);
 
-    n = length(t);
-    y = zeros(length(y0),n);
+    n = length(tOut);
+    y = zeros(length(yn),n);
     
-    y(:,1) = y0;
+    [t, saveIndices] = timepointsWithMaxStep(tOut, options);
+
+    y(:,1) = yn;
+    j = 2;
 
     explicitCoeff = 1;
     implicitCoeff = 1;
     
-    for i = 2:n
+    for i = 2:length(t)
+        ynm1 = yn;
         dt = t(i) - t(i - 1);
-        y(:, i) = y(:, i-1) + ...
-            dt * odefun.explicit(t(i-1), y(:, i-1)) * explicitCoeff;
-        y(:, i) = options.optimmethod( ...
-            @(x) x - y(:, i) - dt * odefun.implicit(t(i), x) * implicitCoeff,...
-            y(:, i-1), ...
+        yn = ynm1 + ...
+            dt * odefun.explicit(t(i-1), ynm1) * explicitCoeff;
+        yn = options.optimmethod( ...
+            @(x) x - yn - dt * odefun.implicit(t(i), x) * implicitCoeff,...
+            ynm1, ...
             options.optimoptions);
+
+        if i == saveIndices(j)
+            y(:,j) = yn;
+            j = j + 1;
+        end
     end
 
-    [t, y] = functionOutputParser(t, y, nargout);
+    [tOut, y] = functionOutputParser(tOut, y, nargout);
 end

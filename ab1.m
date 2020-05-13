@@ -5,7 +5,6 @@ function [tOut, y] = ab1(odefun, tOut, y0, options)
     y = zeros(length(y0),n);
     
     [t, saveIndices] = timepointsWithMaxStep(tOut, options);
-    validateTimeStepsEqual(t);
 
     y(:,1) = y0;
     j = 2;

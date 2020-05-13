@@ -1,33 +1,46 @@
-function [t, y] = abm2(odefun,t,y0,options)
+function [tOut, y] = abm2(odefun,tOut,yn,options)
     if nargin < 4, options = odeset(); end
 
-    n = length(t);
-    y = zeros(length(y0),n);
+    n = length(tOut);
+    y = zeros(length(yn),n);
     
-    y(:,1) = y0;
-    dt = t(2)-t(1);
-    y(:,2) = y(:,1) + dt * odefun(t(1), y(:,1)); % AB1
-    m = 1;
-    err = 1;
-    while err > 1e-6 && m <= 20
-        temp = y(:,2);
-        y(:,2) = y(:,1) + dt/2 * (odefun(t(2), y(:,2)) + odefun(t(1), y(:,1))); % AM1
-        err = norm(y(:,2) - temp)/norm(temp);
-        m = m + 1;
-    end
+    [t, saveIndices] = timepointsWithMaxStep(tOut, options);
+    validateTimeStepsEqual(t);
+
+    y(:,1) = yn;
+    j = 2;
     
-    for i = 3:n
+    for i = 2:length(t)
         dt = t(i)-t(i-1);
-        y(:,i) =  y(:,i-1) + dt/2 * (3 * odefun(t(i-1), y(:,i-1)) - odefun(t(i-2), y(:,i-2))); % AB2
         m = 1;
         err = 1;
-        while err > 1e-6 && m <= 20
-            temp = y(:,i);
-            y(:,i) = y(:,i-1) + dt/2 * (odefun(t(i), y(:,i)) + odefun(t(i-1), y(:,i-1))); % AM2
-            err = norm(y(:,i) - temp)/norm(temp);
-            m = m + 1;
+
+        if i == 2
+            ynm1 = yn;
+            yn = ynm1 + dt * odefun(t(1), ynm1); % AB1
+            while err > 1e-6 && m <= 20
+                temp = yn;
+                yn = ynm1 + dt/2 * (odefun(t(2), yn) + odefun(t(1), ynm1)); % AM1
+                err = norm(yn - temp)/norm(temp);
+                m = m + 1;
+            end
+        else
+            ynm2 = ynm1;
+            ynm1 = yn;
+            yn =  ynm1 + dt/2 * (3 * odefun(t(i-1), ynm1) - odefun(t(i-2), ynm2)); % AB2
+            while err > 1e-6 && m <= 20
+                temp = yn;
+                yn = ynm1 + dt/2 * (odefun(t(i), yn) + odefun(t(i-1), ynm1)); % AM2
+                err = norm(yn - temp)/norm(temp);
+                m = m + 1;
+            end
+        end
+
+        if i == saveIndices(j)
+            y(:,j) = yn;
+            j = j + 1;
         end
     end
 
-    [t, y] = functionOutputParser(t, y, nargout);
+    [tOut, y] = functionOutputParser(tOut, y, nargout);
 end

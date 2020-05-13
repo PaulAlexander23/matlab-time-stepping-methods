@@ -25,6 +25,64 @@ function testInputDefaults(testCase)
     end
 end
 
+function testOutputtingAtSpecifiedTimepointsEqualSteps(testCase)
+    explicitOdefun = @(t,y) y;
+    implicitOdefun = @(t,y) -y^2;
+    odefun = struct('explicit', explicitOdefun, 'implicit', implicitOdefun);
+    t = linspace(0,7,11)';
+    y0 = 0.01;
+    myoptimoptions = optimoptions('fsolve', 'Display', 'off');
+    options = odeset('MaxStep',0.07);
+    options.optimmethod = @fsolve;
+    options.optioptions = myoptimoptions;
+
+    solverList = {@ab1be, @ab2be, @bdf1si, @bdf2si};
+    expectedAccuracy = {6e-2, 3e-2, 6e-2, 4e-3};
+
+    A = y0 / (1 - y0);
+    expected = A*exp(t')./(1 + A*exp(t'));
+
+    for n = 1:length(solverList)
+        fprintf("Solver: %s,\n", func2str(solverList{n}));
+        solution = solverList{n}(odefun, t, y0, options);
+        actual = solution.y';
+
+        verifyEqual(testCase, actual, expected, 'AbsTol', expectedAccuracy{n});
+    end
+end
+
+function testOutputtingAtSpecifiedTimepointsUnequalSteps(testCase)
+    explicitOdefun = @(t,y) y;
+    implicitOdefun = @(t,y) -y^2;
+    odefun = struct('explicit', explicitOdefun, 'implicit', implicitOdefun);
+    t = linspace(0,7,11)';
+    y0 = 0.01;
+    myoptimoptions = optimoptions('fsolve', 'Display', 'off');
+    options = odeset('MaxStep',0.03);
+    options.optimmethod = @fsolve;
+    options.optioptions = myoptimoptions;
+
+    solverList = {@ab1be, @ab2be, @bdf1si, @bdf2si};
+    expectedAccuracy = {6e-2, 3e-2, 6e-2, 4e-3};
+    errors = {false, true, false, true};
+
+    A = y0 / (1 - y0);
+    expected = A*exp(t')./(1 + A*exp(t'));
+
+    for n = 1:length(solverList)
+        fprintf("Solver: %s,\n", func2str(solverList{n}));
+        try
+            solution = solverList{n}(odefun, t, y0, options);
+            actual = solution.y';
+
+            verifyEqual(testCase, actual, expected, 'AbsTol', expectedAccuracy{n});
+            verifyTrue(testCase, ~errors{n});
+        catch testError
+            verifyTrue(testCase, errors{n});
+        end
+    end
+end
+
 function testOutputStruct(testCase)
     explicitOdefun = @(t,y) 1;
     implicitOdefun = @(t,y) -1;
