@@ -34,7 +34,7 @@ function testOutputtingAtSpecifiedTimepointsEqualSteps(testCase)
     myoptimoptions = optimoptions('fsolve', 'Display', 'off');
     options = odeset('MaxStep',0.07);
     options.optimmethod = @fsolve;
-    options.optioptions = myoptimoptions;
+    options.optimoptions = myoptimoptions;
 
     solverList = {@ab1be, @ab2be, @bdf1si, @bdf2si};
     expectedAccuracy = {6e-2, 3e-2, 6e-2, 4e-3};
