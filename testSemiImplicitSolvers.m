@@ -145,7 +145,7 @@ function testOdefunSolveError(testCase)
         'optimoptions', myoptimoptions);
 
     solverList = {@ab1be, @ab2be, @bdf1si, @bdf2si};
-    expectedAccuracy = {6e-2, 3e-2, 6e-2, 4e-3};
+    expectedAccuracy = {6e-2, 3e-2, 6e-2, 5e-3};
 
     A = y0 / (1 - y0);
     expected = A*exp(t')./(1 + A*exp(t'));
@@ -211,7 +211,7 @@ function testOdefunSolveJacobian(testCase)
         'Jacobian', odejac);
 
     solverList = {@bdf1si, @bdf2si};
-    expectedAccuracy = {6e-2, 4e-3};
+    expectedAccuracy = {6e-2, 5e-3};
 
     A = y0 / (1 - y0);
     expected = A*exp(t')./(1 + A*exp(t'));
