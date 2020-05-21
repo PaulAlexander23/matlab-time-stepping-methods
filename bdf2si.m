@@ -20,8 +20,8 @@ function [tOut, y] = bdf2si(odefun, tOut, yn, options)
     for i = 2:length(t)
         dt = t(i) - t(i-1);
         if i == 2
-            explicitF = - yn - ...
-                dt * odefun.explicit(t(i-1), yn);
+            explicitF = - yn / dt - ...
+                odefun.explicit(t(i-1), yn);
             ynm1 = yn;
             yn = options.optimmethod( ...
                 @(h) funBDF1(odefun.implicit, t(i), h, dt, explicitF, options), ...
@@ -29,8 +29,8 @@ function [tOut, y] = bdf2si(odefun, tOut, yn, options)
                 options.optimoptions);
 
         else
-            explicitF = [yn, ynm1] * yCoeff(2:3) + ...
-                dt * [odefun.explicit(t(i-1), yn), ...
+            explicitF = [yn, ynm1] * yCoeff(2:3) / dt + ...
+                [odefun.explicit(t(i-1), yn), ...
                 odefun.explicit(t(i-2), ynm1)] * explicitCoeff;
             ynm1 = yn;
             yn = options.optimmethod( ...
@@ -52,20 +52,20 @@ function [tOut, y] = bdf2si(odefun, tOut, yn, options)
 
     function [F, J] = funBDF1(implicitOdefun, t, h, dt, explicitF, options)
         f = implicitOdefun(t, h);
-        F = h - dt * f + explicitF;
+        F = h / dt - f + explicitF;
 
         if nargout == 2
             jac = options.Jacobian(t, h);
-            J = speye(length(f)) - dt * jac;
+            J = speye(length(f)) / dt - jac;
         end
     end
     
     function [F, J] = funBDF2(implicitOdefun, t, h, dt, explicitF, options)
         f = implicitOdefun(t, h);
-        F = h * yCoeff(1) + dt * f * implicitCoeff + explicitF;
+        F = h * yCoeff(1) / dt + f * implicitCoeff + explicitF;
         if nargout == 2
             jac = options.Jacobian(t, h);
-            J = speye(length(f)) * yCoeff(1) + dt * jac * implicitCoeff;
+            J = speye(length(f)) * yCoeff(1) / dt + jac * implicitCoeff;
         end
 
     end

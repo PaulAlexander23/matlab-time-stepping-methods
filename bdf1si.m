@@ -19,8 +19,8 @@ function [tOut, y] = bdf1si(odefun, tOut, yn, options)
     for i = 2:length(t)
         dt = t(i) - t(i-1);
 
-        explicitF = yn * yCoeff(2) + ...
-            dt * odefun.explicit(t(i-1), yn) * explicitCoeff;
+        explicitF = yn * yCoeff(2) / dt + ...
+            odefun.explicit(t(i-1), yn) * explicitCoeff;
 
         yn = options.optimmethod( ...
             @(h) fun(odefun.implicit, t(i), h, dt, explicitF, options), ...
@@ -40,11 +40,11 @@ function [tOut, y] = bdf1si(odefun, tOut, yn, options)
 
     function [F, J] = fun(implicitOdefun, t, h, dt, explicitF, options)
         f = implicitOdefun(t, h);
-        F = h * yCoeff(1) + dt * f * implicitCoeff + explicitF;
+        F = h * yCoeff(1) / dt + f * implicitCoeff + explicitF;
 
         if nargout == 2
             jac = options.Jacobian(t, h);
-            J = speye(length(f)) * yCoeff(1) + dt * jac * implicitCoeff;
+            J = speye(length(f)) * yCoeff(1) / dt + jac * implicitCoeff;
         end
     end
 
