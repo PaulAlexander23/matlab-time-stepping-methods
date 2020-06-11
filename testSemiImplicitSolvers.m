@@ -90,9 +90,9 @@ function testOutputStruct(testCase)
     t = linspace(0,1,10)';
     y0 = 1;
     myoptimoptions = optimoptions('fsolve', 'Display', 'off');
-    options = struct(...
-        'optimmethod', @fsolve, ...
-        'optimoptions', myoptimoptions);
+    options = odeset();
+    options.optimmethod = @fsolve;
+    options.optimoptions = myoptimoptions;
 
     solverList = {@ab1be, @ab2be, @bdf1si, @bdf2si};
 
@@ -116,9 +116,9 @@ function testOutputMultiple(testCase)
     t = linspace(0,1,10)';
     y0 = 1;
     myoptimoptions = optimoptions('fsolve', 'Display', 'off');
-    options = struct(...
-        'optimmethod', @fsolve, ...
-        'optimoptions', myoptimoptions);
+    options = odeset();
+    options.optimmethod = @fsolve;
+    options.optimoptions = myoptimoptions;
 
     solverList = {@ab1be, @ab2be, @bdf1si, @bdf2si};
 
@@ -140,9 +140,9 @@ function testOdefunSolveError(testCase)
     t = linspace(0,7,100)';
     y0 = 0.01;
     myoptimoptions = optimoptions('fsolve', 'Display', 'off');
-    options = struct(...
-        'optimmethod', @fsolve, ...
-        'optimoptions', myoptimoptions);
+    options = odeset();
+    options.optimmethod = @fsolve;
+    options.optimoptions = myoptimoptions;
 
     solverList = {@ab1be, @ab2be, @bdf1si, @bdf2si};
     expectedAccuracy = {6e-2, 3e-2, 6e-2, 5e-3};
@@ -168,9 +168,9 @@ function testOdefunSolveConvergenceRates(testCase)
     tL = 7;
     y0 = 0.01;
     myoptimoptions = optimoptions('fsolve', 'Display', 'off');
-    options = struct(...
-        'optimmethod', @fsolve, ...
-        'optimoptions', myoptimoptions);
+    options = odeset();
+    options.optimmethod = @fsolve;
+    options.optimoptions = myoptimoptions;
 
     solverList = {@ab1be, @ab2be, @bdf1si, @bdf2si};
     expected = {1, 1, 1, 2};
@@ -205,10 +205,10 @@ function testOdefunSolveJacobian(testCase)
     y0 = 0.01;
     optimmethod = @fsolve;
     myoptimoptions = optimoptions('fsolve', 'Display', 'off', 'SpecifyObjectiveGradient', true);
-    options = struct(...
-        'optimmethod', optimmethod, ...
-        'optimoptions', myoptimoptions, ...
-        'Jacobian', odejac);
+    options = odeset();
+    options.optimmethod = optimmethod;
+    options.optimoptions = myoptimoptions;
+    options.Jacobian = odejac;
 
     solverList = {@bdf1si, @bdf2si};
     expectedAccuracy = {6e-2, 5e-3};
@@ -232,9 +232,9 @@ function testDampedOscillatorError(testCase)
     t = linspace(0,(2.25)*pi,500)';
     y0 = [1;-b];
     myoptimoptions = optimoptions('fsolve', 'Display', 'off');
-    options = struct(...
-        'optimmethod', @fsolve, ...
-        'optimoptions', myoptimoptions);
+    options = odeset();
+    options.optimmethod = @fsolve;
+    options.optimoptions = myoptimoptions;
 
     solverList = {@ab1be, @ab2be, @bdf1si, @bdf2si};
     expectedAccuracy = {9e-2, 9e-2, 9e-2, 2e-3};
@@ -268,9 +268,9 @@ function testDampedOscillatorConvergence(testCase)
     tL = (2.25)*pi;
     y0 = [1;-b];
     myoptimoptions = optimoptions('fsolve', 'Display', 'off');
-    options = struct(...
-        'optimmethod', @fsolve, ...
-        'optimoptions', myoptimoptions);
+    options = odeset();
+    options.optimmethod = @fsolve;
+    options.optimoptions = myoptimoptions;
 
     solverList = {@ab1be, @ab2be, @bdf1si, @bdf2si};
     expected = {1, 1, 1, 2};
