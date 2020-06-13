@@ -1,42 +1,87 @@
-function [t, y] = bdf6si(odefun, t, y0, options)
+function [tOut, y] = bdf6si(odefun, tOut, y0, options)
     if nargin < 4
         options = odeset();
     end
     options = ensureSolverSet(options);
 
-    n = length(t);
-    y = zeros(size(y0, 1), n);
+    hasEvents = ~isempty(options.Events);
 
-    if size(y0, 2) == 1
-        windup = bdf5si(odefun, t(1:6), y0, options);
-        y(:, 1:6) = windup.y';
-    else
-        y(:, 1:6) = y0;
-    end
+    n = length(tOut);
+    y = zeros(size(y0, 1), n);
+    quit = false;
+    if hasEvents, value = 1; end
+
+    [t, saveIndices] = timepointsWithMaxStep(tOut, options);
+    validateTimeStepsEqual(t);
 
     yCoeff = [147/60, -6, 15/2, -20/3, 15/4, -6/5, 1/6]';
     explicitCoeff = -[6, -15, 20, -15, 6, -1]';
     implicitCoeff = -1;
 
-    for i = 7:n
+    if size(y0, 2) == 1
+        windup = bdf5si(odefun, t(1:6), y0, options);
+        y0 = windup.y';
+    end
+
+    i = 0;
+    j = 1;
+    while ~quit && i < 6
+        i = i + 1;
+
+        if i >= 6, ynm5 = ynm4; end
+        if i >= 5, ynm4 = ynm3; end
+        if i >= 4, ynm3 = ynm2; end
+        if i >= 3, ynm2 = ynm1; end
+        if i >= 2, ynm1 = yn; end
+
+        yn = y0(:,i);
+
+        if i == saveIndices(j)
+            y(:,j) = yn;
+            j = j + 1;
+        end
+
+        if hasEvents
+            [~, value] = handleEvents(options.Events, t(i), yn, value);
+        end
+    end
+
+
+    while ~quit
+        i = i + 1;
+
         dt = t(i) - t(i-1);
 
-        explicitF = y(:, i-1:-1:i-6) * yCoeff(2:end) + ...
-            dt * [odefun.explicit(t(i-1), y(:, i-1)), ...
-            odefun.explicit(t(i-2), y(:, i-2)), ...
-            odefun.explicit(t(i-3), y(:, i-3)), ...
-            odefun.explicit(t(i-4), y(:, i-4)), ...
-            odefun.explicit(t(i-5), y(:, i-5)), ...
-            odefun.explicit(t(i-6), y(:, i-6))] * explicitCoeff;
+        explicitF = [yn, ynm1, ynm2, ynm3, ynm4, ynm5] * yCoeff(2:end) + ...
+            dt * [odefun.explicit(t(i-1), yn), ...
+            odefun.explicit(t(i-2), ynm1), ...
+            odefun.explicit(t(i-3), ynm2), ...
+            odefun.explicit(t(i-4), ynm3), ...
+            odefun.explicit(t(i-5), ynm4), ...
+            odefun.explicit(t(i-6), ynm5)] * explicitCoeff;
 
-        y(:, i) = options.optimmethod( ...
+        ynm5 = ynm4;
+        ynm4 = ynm3;
+        ynm3 = ynm2;
+        ynm2 = ynm1;
+        ynm1 = yn;
+
+        yn = options.optimmethod( ...
             @(h) fun(odefun.implicit, t(i), h, dt, explicitF, options), ...
-            y(:, i - 1), ...
+            yn, ...
             options.optimoptions);
 
-        if any(isnan(y(:, i)))
-            fprintf('Nan`s in solution\n')
-            break;
+        if i == saveIndices(j)
+            y(:,j) = yn;
+            j = j + 1;
+        end
+
+        if hasEvents
+            [quit, value, ie, xe, ye] = handleEvents(options.Events, t(i), yn, value);
+        end
+
+        if i >= length(t)
+            quit = true;
         end
     end
 
@@ -51,5 +96,9 @@ function [t, y] = bdf6si(odefun, t, y0, options)
 
     end
 
-    [t, y] = functionOutputParser(t, y, nargout);
+    if ~hasEvents
+        [tOut, y] = functionOutputParser(tOut, y, nargout);
+    else
+        [tOut, y] = functionOutputParserEvents(tOut, y, ie, xe, ye, nargout);
+    end
 end
