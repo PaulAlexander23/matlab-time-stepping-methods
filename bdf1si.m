@@ -4,19 +4,29 @@ function [tOut, y] = bdf1si(odefun, tOut, yn, options)
     end
     options = ensureSolverSet(options);
 
+    hasEvents = ~isempty(options.Events);
+
     n = length(tOut);
     y = zeros(length(yn), n);
+    quit = false;
+    if hasEvents, value = 1; end
 
     [t, saveIndices] = timepointsWithMaxStep(tOut, options);
-
-    y(:, 1) = yn;
-    j = 2;
 
     yCoeff = [1, -1]';
     implicitCoeff = -1;
     explicitCoeff = -1;
 
-    for i = 2:length(t)
+    i = 1;
+    y(:, i) = yn;
+    j = 2;
+    if hasEvents
+        [~, value] = handleEvents(options.Events, t(i), yn, value);
+    end
+
+    while ~quit 
+        i = i + 1;
+
         dt = t(i) - t(i-1);
 
         explicitF = yn * yCoeff(2) / dt + ...
@@ -32,9 +42,12 @@ function [tOut, y] = bdf1si(odefun, tOut, yn, options)
             j = j + 1;
         end
 
-        if any(isnan(yn))
-            fprintf('Nan`s in solution\n')
-            break;
+        if hasEvents
+            [quit, value, ie, xe, ye] = handleEvents(options.Events, t(i), yn, value);
+        end
+
+        if i >= length(t)
+            quit = true;
         end
     end
 
@@ -48,6 +61,10 @@ function [tOut, y] = bdf1si(odefun, tOut, yn, options)
         end
     end
 
-    [tOut, y] = functionOutputParser(tOut, y, nargout);
+    if ~hasEvents
+        [tOut, y] = functionOutputParser(tOut, y, nargout);
+    else
+        [tOut, y] = functionOutputParserEvents(tOut, y, ie, xe, ye, nargout);
+    end
 end
 

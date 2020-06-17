@@ -2,38 +2,87 @@ function tests = testEvents()
     tests = functiontests(localfunctions);
 end
 
-function testEvent(testCase)
-    odefun = @(t, y) -1;
-    t = linspace(0,2,3)';
-    y0 = 1;
-    options = odeset("event",@myEvent, 'MaxStep', 1e-3);
+function testEventODE45(testCase)
+    [t, y0, options] = setupVars();
 
-    sol = ode45(odefun, t, y0, options);
+    sol = ode45(@odefun, t, y0, options);
 
-    save("temp.mat")
+    verifyZeroAfterEvent(testCase, sol);
+end
 
-    function [value, isterminal, direction] = myEvent(t, y)
-        value = y;
-        isterminal = true;
-        direction = 0;
-    end
+function testEventBDF1SI(testCase)
+    [t, y0, options] = setupVars();
+
+    sol = bdf1si(odefunSemiImplicit(), t, y0, options);
+
+    verifyZeroAfterEvent(testCase, sol);
 end
 
 function testEventBDF2SI(testCase)
-    explicitOdefun = @(t,y) -1/2;
-    implicitOdefun = @(t,y) -1/2;
-    odefun = struct('explicit', explicitOdefun, 'implicit', implicitOdefun);
+    [t, y0, options] = setupVars();
+
+    sol = bdf2si(odefunSemiImplicit(), t, y0, options);
+
+    verifyZeroAfterEvent(testCase, sol);
+end
+
+function testEventBDF3SI(testCase)
+    [t, y0, options] = setupVars();
+
+    sol = bdf3si(odefunSemiImplicit(), t, y0, options);
+
+    verifyZeroAfterEvent(testCase, sol);
+end
+
+function testEventBDF4SI(testCase)
+    [t, y0, options] = setupVars();
+
+    sol = bdf4si(odefunSemiImplicit(), t, y0, options);
+
+    verifyZeroAfterEvent(testCase, sol);
+end
+
+function testEventBDF5SI(testCase)
+    [t, y0, options] = setupVars();
+
+    sol = bdf5si(odefunSemiImplicit(), t, y0, options);
+
+    verifyZeroAfterEvent(testCase, sol);
+end
+
+function testEventBDF6SI(testCase)
+    [t, y0, options] = setupVars();
+
+    sol = bdf6si(odefunSemiImplicit(), t, y0, options);
+
+    verifyZeroAfterEvent(testCase, sol);
+end
+
+% End of test functions
+
+function [t, y0, options] = setupVars()
     t = [0,0.5,1.5,2]';
     y0 = 1;
-    options = odeset("event",@myEvent, 'MaxStep', 1e-3);
+    options = odeset("event",@myEvent, 'MaxStep', 1e-2);
+end
 
-    sol = bdf2si(odefun, t, y0, options);
+function f = odefun(t, y)
+    f = -1 + 0*y + 0*t;
+end
 
-    save("temp.mat")
+function f = odefunSemiImplicit()
+    f = struct();
+    f.explicit = @(t, y) -1/2 + 0*y + 0*t;
+    f.implicit = @(t, y) -1/2 + 0*y + 0*t;
+end
 
-    function [value, isterminal, direction] = myEvent(t, y)
-        value = y;
-        isterminal = true;
-        direction = 0;
-    end
+function [value, isterminal, direction] = myEvent(~, y)
+    value = y;
+    isterminal = true;
+    direction = 0;
+end
+
+function verifyZeroAfterEvent(testCase, sol)
+    index = sol.x > 1 + 1e-6;
+    verifyEqual(testCase, sol.y(index), 0*sol.y(index), 'AbsTol', 1e-6)
 end
