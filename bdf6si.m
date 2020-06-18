@@ -24,7 +24,7 @@ function [tOut, y] = bdf6si(odefun, tOut, y0, options)
     end
 
     i = 0;
-    j = 1;
+    k = 1;
     while ~quit && i < 6
         i = i + 1;
 
@@ -36,13 +36,13 @@ function [tOut, y] = bdf6si(odefun, tOut, y0, options)
 
         yn = y0(:,i);
 
-        if i == saveIndices(j)
-            y(:,j) = yn;
-            j = j + 1;
+        if i == saveIndices(k)
+            y(:,k) = yn;
+            k = k + 1;
         end
 
         if hasEvents
-            [~, value] = handleEvents(options.Events, t(i), yn, value);
+            [quit, value, ie, xe, ye] = handleEvents(options.Events, t(i), yn, value);
         end
     end
 
@@ -71,9 +71,9 @@ function [tOut, y] = bdf6si(odefun, tOut, y0, options)
             yn, ...
             options.optimoptions);
 
-        if i == saveIndices(j)
-            y(:,j) = yn;
-            j = j + 1;
+        if i == saveIndices(k)
+            y(:,k) = yn;
+            k = k + 1;
         end
 
         if hasEvents
