@@ -43,6 +43,7 @@ function [tOut, y] = bdf6si(odefun, tOut, y0, options)
 
         if hasEvents
             [quit, value, ie, xe, ye] = handleEvents(options.Events, t(i), yn, value);
+            if i == 1, quit = false; end
         end
     end
 
