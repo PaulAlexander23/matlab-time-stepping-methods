@@ -1,4 +1,4 @@
-function [tOut, y] = bdf2si(odefun, tOut, yn, options)
+function [tOut, y] = bdf2si(odefun, tOut, y0, options)
     if nargin < 4
         options = odeset();
     end
@@ -7,7 +7,7 @@ function [tOut, y] = bdf2si(odefun, tOut, yn, options)
     hasEvents = ~isempty(options.Events);
 
     n = length(tOut);
-    y = zeros(length(yn), n);
+    y = zeros(size(y0, 1), n);
     quit = false;
     if hasEvents, value = 1; end
 
@@ -18,11 +18,29 @@ function [tOut, y] = bdf2si(odefun, tOut, yn, options)
     explicitCoeff = -[4/3, -2/3]';
     implicitCoeff = -2/3;
 
-    i = 1;
-    y(:, 1) = yn;
-    j = 2;
-    if hasEvents
-        [~, value] = handleEvents(options.Events, t(i), yn, value);
+    if size(y0, 2) == 1
+        windup = bdf1si(odefun, t(1:2), y0, options);
+        y0 = windup.y';
+    end
+
+    i = 0;
+    k = 1;
+    while ~quit && i < 2
+        i = i + 1;
+
+        if i >= 2, ynm1 = yn; end
+
+        yn = y0(:,i);
+
+        if i == saveIndices(k)
+            y(:,k) = yn;
+            k = k + 1;
+        end
+
+        if hasEvents
+            [quit, value, ie, xe, ye] = handleEvents(options.Events, t(i), yn, value);
+            if i == 1, quit = false; end
+        end
     end
 
     while ~quit
@@ -49,9 +67,9 @@ function [tOut, y] = bdf2si(odefun, tOut, yn, options)
                 options.optimoptions);
         end
 
-        if i == saveIndices(j)
-            y(:,j) = yn;
-            j = j + 1;
+        if i == saveIndices(k)
+            y(:,k) = yn;
+            k = k + 1;
         end
 
         if hasEvents
