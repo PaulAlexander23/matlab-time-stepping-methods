@@ -50,8 +50,8 @@ function [tOut, y] = bdf3si(odefun, tOut, y0, options)
 
         dt = t(i) - t(i-1);
 
-        explicitF = [yn, ynm1, ynm2] * yCoeff(2:end) + ...
-            dt * [odefun.explicit(t(i-1), yn), ...
+        explicitF = [yn, ynm1, ynm2] * yCoeff(2:end)/dt + ...
+            [odefun.explicit(t(i-1), yn), ...
             odefun.explicit(t(i-2), ynm1), ...
             odefun.explicit(t(i-3), ynm2)] * explicitCoeff;
 
@@ -79,11 +79,11 @@ function [tOut, y] = bdf3si(odefun, tOut, y0, options)
 
     function [F, J] = fun(implicitOdefun, t, h, dt, explicitF, options)
         f = implicitOdefun(t, h);
-        F = h * yCoeff(1) + dt * f * implicitCoeff + explicitF;
+        F = h * yCoeff(1)/dt + f * implicitCoeff + explicitF;
 
         if nargout == 2
             j = options.Jacobian(t, h);
-            J = speye(length(f)) * yCoeff(1) + dt * j * implicitCoeff;
+            J = speye(length(f)) * yCoeff(1)/dt + j * implicitCoeff;
         end
     end
 

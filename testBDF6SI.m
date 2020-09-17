@@ -46,7 +46,7 @@ function testDampedOscillatorConvergencePerfectWindupMaxStep(testCase)
         % plot(log10(MaxStep), log10(abs(difference(2,:))));
         % hold off;
 
-        verifyEqual(testCase, actual, [expected{n}; expected{n}], 'AbsTol', 0.8);
+        verifyEqual(testCase, actual, [expected{n}; expected{n}], 'AbsTol', 1.1);
     end
 end
 

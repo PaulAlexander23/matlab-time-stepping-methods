@@ -41,8 +41,8 @@ function [tOut, y] = bdf4si(odefun, tOut, y0, options)
 
             yn = y0(:,i);
         else
-            explicitF = [yn, ynm1, ynm2, ynm3] * yCoeff(2:end) + ...
-                dt * [odefun.explicit(t-dt, yn), ...
+            explicitF = [yn, ynm1, ynm2, ynm3] * yCoeff(2:end)/dt + ...
+                [odefun.explicit(t-dt, yn), ...
                 odefun.explicit(t - 2*dt, ynm1), ...
                 odefun.explicit(t - 3*dt, ynm2), ...
                 odefun.explicit(t - 4*dt, ynm3)] * explicitCoeff;
@@ -57,7 +57,8 @@ function [tOut, y] = bdf4si(odefun, tOut, y0, options)
                 options.optimoptions);
         end
 
-        if abs(t - tOut(k)) < 1e-13
+        if t > tOut(k) - 1e-13
+            t = tOut(k);
             y(:,k) = yn;
             k = k + 1;
         end
@@ -67,7 +68,7 @@ function [tOut, y] = bdf4si(odefun, tOut, y0, options)
             if i == 1, quit = false; end
         end
 
-        if abs(t - tOut(end)) < 1e-13
+        if k > length(tOut)
             quit = true;
         end
 
@@ -77,11 +78,11 @@ function [tOut, y] = bdf4si(odefun, tOut, y0, options)
 
     function [F, J] = fun(implicitOdefun, t, h, dt, explicitF, options)
         f = implicitOdefun(t, h);
-        F = h * yCoeff(1) + dt * f * implicitCoeff + explicitF;
+        F = h * yCoeff(1)/dt + f * implicitCoeff + explicitF;
 
         if nargout == 2
             j = options.Jacobian(t, h);
-            J = speye(length(f)) * yCoeff(1) + dt * j * implicitCoeff;
+            J = speye(length(f)) * yCoeff(1)/dt + j * implicitCoeff;
         end
 
     end
